@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { Task, User, STATUS_COLORS } from "../types";
 
@@ -25,7 +25,7 @@ export function TaskDetail() {
 
   const fetchTask = async () => {
     try {
-      const res = await axios.get(`/api/tasks/${id}`);
+      const res = await api.get(`/api/tasks/${id}`);
       setTask(res.data);
       setEditForm({
         clientName: res.data.clientName,
@@ -46,7 +46,7 @@ export function TaskDetail() {
 
   const fetchTechnicians = async () => {
     try {
-      const res = await axios.get("/api/auth/users");
+      const res = await api.get("/api/auth/users");
       setUsers(res.data.filter((u: User) => u.role === "TECHNICIAN"));
     } catch {}
   };
@@ -60,7 +60,7 @@ export function TaskDetail() {
     if (!selectedTechs.length) return;
     setActionLoading(true);
     try {
-      const res = await axios.post(`/api/tasks/${id}/assign`, {
+      const res = await api.post(`/api/tasks/${id}/assign`, {
         userIds: selectedTechs,
         leadUserId: leadTech,
       });
@@ -75,7 +75,7 @@ export function TaskDetail() {
   const handleAccept = async () => {
     setActionLoading(true);
     try {
-      await axios.post(`/api/tasks/${id}/accept`);
+      await api.post(`/api/tasks/${id}/accept`);
       await fetchTask();
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to accept");
@@ -88,7 +88,7 @@ export function TaskDetail() {
     if (!clarificationNotes) return;
     setActionLoading(true);
     try {
-      await axios.post(`/api/tasks/${id}/clarification`, { notes: clarificationNotes });
+      await api.post(`/api/tasks/${id}/clarification`, { notes: clarificationNotes });
       setClarificationNotes("");
       await fetchTask();
     } catch (err: any) {
@@ -101,7 +101,7 @@ export function TaskDetail() {
   const handleStart = async () => {
     setActionLoading(true);
     try {
-      await axios.post(`/api/tasks/${id}/start`);
+      await api.post(`/api/tasks/${id}/start`);
       await fetchTask();
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to start");
@@ -114,7 +114,7 @@ export function TaskDetail() {
     if (!progressNotes) return;
     setActionLoading(true);
     try {
-      await axios.post(`/api/tasks/${id}/progress`, { notes: progressNotes });
+      await api.post(`/api/tasks/${id}/progress`, { notes: progressNotes });
       setProgressNotes("");
       await fetchTask();
     } catch (err: any) {
@@ -128,7 +128,7 @@ export function TaskDetail() {
     if (!completionNotes) return;
     setActionLoading(true);
     try {
-      const res = await axios.post(`/api/tasks/${id}/complete`, { notes: completionNotes });
+      const res = await api.post(`/api/tasks/${id}/complete`, { notes: completionNotes });
       setTask(res.data);
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to complete");
@@ -140,7 +140,7 @@ export function TaskDetail() {
   const handleReview = async (approved: boolean) => {
     setActionLoading(true);
     try {
-      const res = await axios.post(`/api/tasks/${id}/review`, {
+      const res = await api.post(`/api/tasks/${id}/review`, {
         approved,
         reason: approved ? undefined : reviewReason,
       });
@@ -156,7 +156,7 @@ export function TaskDetail() {
   const handleEdit = async () => {
     setActionLoading(true);
     try {
-      const res = await axios.put(`/api/tasks/${id}`, editForm);
+      const res = await api.put(`/api/tasks/${id}`, editForm);
       setTask(res.data);
       setEditMode(false);
     } catch (err: any) {

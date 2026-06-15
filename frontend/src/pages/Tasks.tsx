@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { STATUS_COLORS } from "../types";
 
@@ -16,7 +16,7 @@ export function Tasks() {
       const params: any = {};
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.priority = priorityFilter;
-      const res = await axios.get("/api/tasks", { params });
+      const res = await api.get("/api/tasks", { params });
       setTasks(res.data);
     } catch (err) {
       console.error("Failed to load tasks", err);

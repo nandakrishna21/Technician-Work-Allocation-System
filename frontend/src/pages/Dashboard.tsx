@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import { useAuth } from "../context/AuthContext";
 import { DashboardStats, STATUS_COLORS } from "../types";
 
@@ -14,8 +14,8 @@ export function Dashboard() {
     const fetchData = async () => {
       try {
         const [statsRes, tasksRes] = await Promise.all([
-          axios.get("/api/dashboard"),
-          axios.get("/api/tasks"),
+          api.get("/api/dashboard"),
+          api.get("/api/tasks"),
         ]);
         setStats(statsRes.data);
         setRecentTasks(tasksRes.data.slice(0, 5));

@@ -1,6 +1,6 @@
 import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 
 export function CreateTask() {
   const navigate = useNavigate();
@@ -26,7 +26,7 @@ export function CreateTask() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.post("/api/tasks", form);
+      const res = await api.post("/api/tasks", form);
       navigate(`/tasks/${res.data.id}`);
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to create task");

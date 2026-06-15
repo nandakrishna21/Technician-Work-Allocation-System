@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from "react";
-import axios from "axios";
+import api from "../api";
 import { User } from "../types";
 
 export function Users() {
@@ -17,7 +17,7 @@ export function Users() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("/api/auth/users");
+      const res = await api.get("/api/auth/users");
       setUsers(res.data);
     } catch (err) {
       console.error("Failed to load users", err);
@@ -33,7 +33,7 @@ export function Users() {
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post("/api/auth/users", form);
+      await api.post("/api/auth/users", form);
       setShowCreate(false);
       setForm({ username: "", password: "", name: "", role: "TECHNICIAN", phone: "", email: "" });
       fetchUsers();
