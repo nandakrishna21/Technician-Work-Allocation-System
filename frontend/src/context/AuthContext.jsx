@@ -8,8 +8,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const saved = localStorage.getItem('user');
+    const token = sessionStorage.getItem('token');
+    const saved = sessionStorage.getItem('user');
     if (token && saved) {
       try {
         setUser(JSON.parse(saved));
@@ -21,15 +21,15 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     const res = await authAPI.login(username, password);
     const { token, user: userData } = res.data;
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    sessionStorage.setItem('token', token);
+    sessionStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
     return userData;
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     setUser(null);
     window.location.href = '/login';
   };
