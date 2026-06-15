@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' }
 });
 
@@ -66,4 +68,5 @@ export const dashboardAPI = {
   getActivity: () => api.get('/dashboard/activity')
 };
 
+export { BASE_URL };
 export default api;

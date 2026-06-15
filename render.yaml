@@ -10,17 +10,14 @@ services:
         generateValue: true
       - key: PORT
         value: 5000
+      - key: CORS_ORIGIN
+        value: https://technician-work-allocation-frontend.onrender.com
 
   - type: web
     name: technician-work-allocation-frontend
     env: static
-    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
         value: https://technician-work-allocation-backend.onrender.com/api
-    routes:
-      - type: rewrite
-        source: /api/*
-        destination: https://technician-work-allocation-backend.onrender.com/api/:splat
