@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const initializeDatabase = require('./config/schema');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
@@ -27,6 +28,16 @@ app.use('/api/dashboard', dashboardRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(frontendDist, 'index.html'));
+    }
+  });
+}
 
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);

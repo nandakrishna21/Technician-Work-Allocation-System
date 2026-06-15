@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { tasksAPI, usersAPI, BASE_URL } from '../services/api';
+import { tasksAPI, usersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function TaskDetail() {
@@ -373,9 +373,9 @@ export default function TaskDetail() {
             {task.photos?.map(photo => (
               <div key={photo.id}>
                 <img
-                    src={`${BASE_URL}/tasks/${task.id}/photos/${photo.file_path}`}
+                    src={`/api/tasks/${task.id}/photos/${photo.file_path}`}
                   alt="Task photo"
-                  onClick={() => window.open(`${BASE_URL}/tasks/${task.id}/photos/${photo.file_path}`, '_blank')}
+                  onClick={() => window.open(`/api/tasks/${task.id}/photos/${photo.file_path}`, '_blank')}
                 />
                 <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>{photo.user_name}</div>
               </div>

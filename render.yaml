@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: technician-work-allocation-backend
+    name: technician-work-allocation
     env: node
     plan: free
-    buildCommand: cd backend && npm install
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
     startCommand: cd backend && node server.js
     envVars:
       - key: NODE_VERSION
@@ -12,14 +12,3 @@ services:
         generateValue: true
       - key: PORT
         value: 5000
-      - key: CORS_ORIGIN
-        value: https://technician-work-allocation-frontend.onrender.com
-
-  - type: web
-    name: technician-work-allocation-frontend
-    env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://technician-work-allocation-backend.onrender.com/api
