@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { tasksAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function TaskList() {
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status') || '';
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ status: '', priority: '', search: '' });
+  const [filters, setFilters] = useState({ status: initialStatus, priority: '', search: '' });
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -23,7 +25,7 @@ export default function TaskList() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchTasks(); }, []);
+  useEffect(() => { fetchTasks(); }, [filters.status, filters.priority, filters.search]);
 
   const handleFilter = () => fetchTasks();
 
@@ -38,7 +40,7 @@ export default function TaskList() {
   return (
     <div>
       <div className="page-header">
-        <h1>Tasks</h1>
+        <h1>Tasks{filters.status ? ` - ${filters.status.replace(/_/g, ' ')}` : ''}</h1>
         {user?.role === 'admin' && (
           <button className="btn btn-primary" onClick={() => navigate('/tasks/create')}>+ Create Task</button>
         )}
@@ -68,7 +70,7 @@ export default function TaskList() {
             <option value="Medium">Medium</option>
             <option value="Low">Low</option>
           </select>
-          <button className="btn btn-sm btn-primary" onClick={handleFilter}>Apply Filters</button>
+          <button className="btn btn-sm btn-outline" onClick={() => { setFilters({ status: '', priority: '', search: '' }); navigate('/tasks'); }}>Clear</button>
         </div>
 
         {loading ? (
@@ -98,7 +100,7 @@ export default function TaskList() {
                     <td><span className={`priority-${task.priority.toLowerCase()}`}>{task.priority}</span></td>
                     <td><span className={statusBadge(task.status)}>{task.status}</span></td>
                     <td>{task.technicians?.map(t => t.name).join(', ') || '-'}</td>
-                    <td style={{ fontSize: '0.8rem', color: '#999' }}>{task.created_at}</td>
+                    <td style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{task.created_at}</td>
                   </tr>
                 ))}
               </tbody>

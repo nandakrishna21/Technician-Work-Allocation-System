@@ -46,12 +46,12 @@ export default function Dashboard() {
     <div>
       <div className="page-header">
         <h1>Dashboard</h1>
-        <span style={{ color: '#666' }}>Welcome, {user?.name}</span>
+        <span style={{ color: 'var(--text-muted)' }}>Welcome, {user?.name}</span>
       </div>
 
       <div className="stats-grid">
         {statCards.map(s => (
-          <div key={s.key} className={`stat-card ${s.className}`}>
+          <div key={s.key} className={`stat-card ${s.className}`} onClick={() => navigate(`/tasks?status=${s.key}`)}>
             <div className="stat-value">{counts[s.key] || 0}</div>
             <div className="stat-label">{s.label}</div>
           </div>
@@ -87,7 +87,7 @@ export default function Dashboard() {
                       <td>{task.job_type}</td>
                       <td><span className={`priority-${task.priority.toLowerCase()}`}>{task.priority}</span></td>
                       <td><span className={statusBadge(task.status)}>{task.status}</span></td>
-                      <td style={{ fontSize: '0.8rem', color: '#999' }}>{task.created_at}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{task.created_at}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -108,7 +108,7 @@ export default function Dashboard() {
                 <div className="activity-icon">&#9654;</div>
                 <div className="activity-content">
                   <div className="action">{log.action}</div>
-                  <div style={{ fontSize: '0.85rem', color: '#666' }}>{log.details}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{log.details}</div>
                   <div className="meta">{log.user_name} &middot; {log.created_at}</div>
                 </div>
               </div>

@@ -1,8 +1,21 @@
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   return (
     <div className="app-layout">
@@ -26,6 +39,9 @@ export default function Layout() {
             </NavLink>
           )}
         </nav>
+        <button className="theme-toggle" onClick={toggleTheme}>
+          {theme === 'light' ? '\u263E Dark Mode' : '\u2600 Light Mode'}
+        </button>
         <div className="user-info">
           <div><strong>{user?.name}</strong></div>
           <div className="role">{user?.role}</div>
