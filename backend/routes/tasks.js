@@ -322,8 +322,9 @@ router.post('/:id/reopen', authenticate, authorize('admin'), (req, res) => {
   }
 });
 
-router.get('/:id/photos/:filename', authenticate, (req, res) => {
-  const filePath = path.join(__dirname, '..', 'uploads', req.params.filename);
+router.get('/:id/photos/:filename', (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(__dirname, '..', 'uploads', filename);
   res.sendFile(filePath);
 });
 
