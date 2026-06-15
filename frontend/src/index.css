@@ -119,6 +119,24 @@ tr:hover { background: var(--hover-bg); }
 .login-card .form-group { margin-bottom: 1.25rem; }
 .login-card .btn { width: 100%; justify-content: center; padding: 0.75rem; }
 
+.role-selector { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
+.role-btn { flex: 1; padding: 1rem; border: 2px solid #e0e0e0; border-radius: 12px; background: var(--card-bg); cursor: pointer; text-align: center; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.role-btn:hover { border-color: #3949ab; background: #f5f6ff; }
+.role-btn.active { border-color: #1a237e; background: #e8eaf6; }
+.role-btn .role-icon { font-size: 1.5rem; }
+.role-btn .role-label { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+[data-theme="dark"] .role-btn { border-color: #3a3d4a; }
+[data-theme="dark"] .role-btn:hover { border-color: #5c6bc0; background: #1a1d2e; }
+[data-theme="dark"] .role-btn.active { border-color: #7986cb; background: #252833; }
+
+.login-form { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.forgot-password { text-align: center; margin-top: 1rem; }
+.forgot-btn { background: none; border: none; color: #5c6bc0; font-size: 0.85rem; cursor: pointer; padding: 0.25rem; }
+.forgot-btn:hover { text-decoration: underline; }
+.forgot-info { margin-top: 0.5rem; padding: 0.75rem; background: #fff3e0; border-radius: 8px; font-size: 0.8rem; color: #e65100; }
+
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal { background: var(--card-bg); border-radius: 16px; padding: 2rem; width: 600px; max-width: 90vw; max-height: 85vh; overflow-y: auto; }
 .modal h2 { margin-bottom: 1.5rem; }
