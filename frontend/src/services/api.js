@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '/api',
-  headers: { 'Content-Type': 'application/json' }
+  baseURL: '/api'
 });
 
 api.interceptors.request.use(config => {
@@ -39,23 +38,17 @@ export const tasksAPI = {
   getAll: (params) => api.get('/tasks', { params }),
   getById: (id) => api.get(`/tasks/${id}`),
   create: (data) => {
-    return api.post('/tasks', data, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.post('/tasks', data);
   },
   update: (id, data) => {
-    return api.put(`/tasks/${id}`, data, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.put(`/tasks/${id}`, data);
   },
   assign: (id, data) => api.post(`/tasks/${id}/assign`, data),
   accept: (id) => api.post(`/tasks/${id}/accept`),
   start: (id) => api.post(`/tasks/${id}/start`),
   addNote: (id, data) => api.post(`/tasks/${id}/notes`, data),
   complete: (id, data) => {
-    return api.post(`/tasks/${id}/complete`, data, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    return api.post(`/tasks/${id}/complete`, data);
   },
   approve: (id) => api.post(`/tasks/${id}/approve`),
   reopen: (id) => api.post(`/tasks/${id}/reopen`)

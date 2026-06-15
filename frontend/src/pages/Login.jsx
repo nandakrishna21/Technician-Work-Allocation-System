@@ -43,10 +43,6 @@ export default function Login() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-        <div style={{ marginTop: '1.5rem', fontSize: '0.8rem', color: '#999' }}>
-          <p>Admin: admin / admin123</p>
-          <p>Technician: tech1 / tech123</p>
-        </div>
       </div>
     </div>
   );
