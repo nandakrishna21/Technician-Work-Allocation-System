@@ -273,6 +273,16 @@ export default function TaskDetail() {
               <label>Special Instructions</label>
               <div className="value">{task.special_instructions || 'None.'}</div>
             </div>
+            {task.attachment && (
+              <div className="detail-item full">
+                <label>Attachment</label>
+                <div className="value">
+                  <a href={`/uploads/${task.attachment}`} target="_blank" rel="noopener noreferrer">
+                    {task.attachment.replace(/^\d+-\d+-/, '')}
+                  </a>
+                </div>
+              </div>
+            )}
             {task.completion_notes && (
               <div className="detail-item full">
                 <label>Completion Notes</label>
