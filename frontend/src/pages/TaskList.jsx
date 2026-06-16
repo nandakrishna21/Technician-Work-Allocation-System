@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import { tasksAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -29,6 +30,30 @@ export default function TaskList() {
 
   const handleFilter = () => fetchTasks();
 
+  const exportToExcel = () => {
+    const data = tasks.map(t => ({
+      'Task ID': t.id,
+      'Client Name': t.client_name,
+      'Contact Person': t.contact_person || '',
+      'Mobile': t.mobile_number || '',
+      'Location': t.location,
+      'Job Type': t.job_type,
+      'Priority': t.priority,
+      'Status': t.status,
+      'Technicians': t.technicians?.map(tech => tech.name).join(', ') || '',
+      'Description': t.description || '',
+      'Special Instructions': t.special_instructions || '',
+      'Created By': t.created_by_name || '',
+      'Created At': t.created_at,
+      'Completed At': t.completed_at || ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+    XLSX.writeFile(wb, `tasks-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
   const statusBadge = (status) => {
     const map = {
       CREATED: 'badge-created', ASSIGNED: 'badge-assigned', ACCEPTED: 'badge-accepted',
@@ -41,9 +66,14 @@ export default function TaskList() {
     <div>
       <div className="page-header">
         <h1>Tasks{filters.status ? ` - ${filters.status.replace(/_/g, ' ')}` : ''}</h1>
-        {user?.role === 'admin' && (
-          <button className="btn btn-primary" onClick={() => navigate('/tasks/create')}>+ Create Task</button>
-        )}
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {tasks.length > 0 && (
+            <button className="btn btn-sm btn-outline" onClick={exportToExcel}>&#8681; Export Excel</button>
+          )}
+          {user?.role === 'admin' && (
+            <button className="btn btn-primary" onClick={() => navigate('/tasks/create')}>+ Create Task</button>
+          )}
+        </div>
       </div>
 
       <div className="card">

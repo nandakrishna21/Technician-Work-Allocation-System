@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { dashboardAPI } from '../services/api';
+import { dashboardAPI, tasksAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
   const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const loadData = () => {
+    setLoading(true);
     Promise.all([dashboardAPI.get(), dashboardAPI.getActivity()])
       .then(([dashRes, activityRes]) => {
         setData(dashRes.data);
@@ -18,7 +21,22 @@ export default function Dashboard() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      await tasksAPI.resetAll();
+      setShowResetConfirm(false);
+      loadData();
+    } catch (err) {
+      console.error('Reset failed:', err);
+    } finally {
+      setResetting(false);
+    }
+  };
 
   if (loading) return <div className="empty-state">Loading dashboard...</div>;
   if (!data) return <div className="empty-state">Failed to load dashboard.</div>;
@@ -46,7 +64,12 @@ export default function Dashboard() {
     <div>
       <div className="page-header">
         <h1>Dashboard</h1>
-        <span style={{ color: 'var(--text-muted)' }}>Welcome, {user?.name}</span>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <span style={{ color: 'var(--text-muted)' }}>Welcome, {user?.name}</span>
+          {user?.role === 'admin' && (
+            <button className="btn btn-sm btn-danger" onClick={() => setShowResetConfirm(true)}>&#8634; Reset All</button>
+          )}
+        </div>
       </div>
 
       <div className="stats-grid">
@@ -116,6 +139,23 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {showResetConfirm && (
+        <div className="modal-overlay" onClick={() => !resetting && setShowResetConfirm(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '400px' }}>
+            <h2>Reset All Tasks?</h2>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+              This will permanently delete all tasks, assignments, notes, photos, and activity logs. Users will be preserved. This action cannot be undone.
+            </p>
+            <div className="form-actions">
+              <button className="btn btn-outline" onClick={() => setShowResetConfirm(false)} disabled={resetting}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleReset} disabled={resetting}>
+                {resetting ? 'Resetting...' : 'Yes, Reset Everything'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

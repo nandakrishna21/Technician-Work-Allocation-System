@@ -51,7 +51,8 @@ export const tasksAPI = {
     return api.post(`/tasks/${id}/complete`, data);
   },
   approve: (id) => api.post(`/tasks/${id}/approve`),
-  reopen: (id) => api.post(`/tasks/${id}/reopen`)
+  reopen: (id) => api.post(`/tasks/${id}/reopen`),
+  resetAll: () => api.post('/tasks/reset-all')
 };
 
 export const dashboardAPI = {

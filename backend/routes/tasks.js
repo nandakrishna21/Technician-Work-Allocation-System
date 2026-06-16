@@ -322,6 +322,25 @@ router.post('/:id/reopen', authenticate, authorize('admin'), (req, res) => {
   }
 });
 
+router.post('/reset-all', authenticate, authorize('admin'), (req, res) => {
+  try {
+    db.exec(`
+      DELETE FROM task_photos;
+      DELETE FROM task_notes;
+      DELETE FROM activity_logs;
+      DELETE FROM task_assignments;
+      DELETE FROM tasks;
+    `);
+
+    db.prepare('INSERT INTO activity_logs (task_id, user_id, action, details) VALUES (?, ?, ?, ?)').run('SYSTEM', req.user.id, 'SYSTEM_RESET', `All tasks reset by ${req.user.name}`);
+
+    res.json({ message: 'All tasks have been reset successfully.' });
+  } catch (err) {
+    console.error('Reset error:', err);
+    res.status(500).json({ error: 'Failed to reset tasks.' });
+  }
+});
+
 router.get('/:id/photos/:filename', (req, res) => {
   const filename = path.basename(req.params.filename);
   const filePath = path.join(__dirname, '..', 'uploads', filename);
