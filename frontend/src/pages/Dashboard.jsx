@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -27,12 +28,13 @@ export default function Dashboard() {
 
   const handleReset = async () => {
     setResetting(true);
+    setResetError('');
     try {
       await tasksAPI.resetAll();
       setShowResetConfirm(false);
       loadData();
     } catch (err) {
-      console.error('Reset failed:', err);
+      setResetError(err.response?.data?.error || 'Reset failed. Please try again.');
     } finally {
       setResetting(false);
     }
@@ -144,6 +146,7 @@ export default function Dashboard() {
         <div className="modal-overlay" onClick={() => !resetting && setShowResetConfirm(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '400px' }}>
             <h2>Reset All Tasks?</h2>
+            {resetError && <div className="error-message">{resetError}</div>}
             <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
               This will permanently delete all tasks, assignments, notes, photos, and activity logs. Users will be preserved. This action cannot be undone.
             </p>

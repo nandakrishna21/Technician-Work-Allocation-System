@@ -67,9 +67,9 @@ export default function TaskList() {
       <div className="page-header">
         <h1>Tasks{filters.status ? ` - ${filters.status.replace(/_/g, ' ')}` : ''}</h1>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          {tasks.length > 0 && (
-            <button className="btn btn-sm btn-outline" onClick={exportToExcel}>&#8681; Export Excel</button>
-          )}
+          <button className="btn btn-sm btn-outline" onClick={exportToExcel} disabled={tasks.length === 0}>
+            &#8681; Export Excel
+          </button>
           {user?.role === 'admin' && (
             <button className="btn btn-primary" onClick={() => navigate('/tasks/create')}>+ Create Task</button>
           )}
