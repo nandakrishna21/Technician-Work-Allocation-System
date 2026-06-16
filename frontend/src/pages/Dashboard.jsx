@@ -27,16 +27,15 @@ export default function Dashboard() {
   useEffect(() => { loadData(); }, []);
 
   const handleReset = async () => {
-    setResetting(true);
+    setShowResetConfirm(false);
     setResetError('');
+    const emptyCounts = { CREATED: 0, ASSIGNED: 0, ACCEPTED: 0, IN_PROGRESS: 0, COMPLETED: 0, CLOSED: 0 };
+    setData(prev => prev ? { ...prev, counts: emptyCounts, totalTasks: 0, recentTasks: [] } : prev);
     try {
       await tasksAPI.resetAll();
-      setShowResetConfirm(false);
       loadData();
     } catch (err) {
-      setResetError(err.response?.data?.error || 'Reset failed. Please try again.');
-    } finally {
-      setResetting(false);
+      loadData();
     }
   };
 
