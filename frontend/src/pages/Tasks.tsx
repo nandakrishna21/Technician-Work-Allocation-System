@@ -144,7 +144,7 @@ export function Tasks() {
                       : "-"}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(task.createdAt).toLocaleDateString()}
+                    {new Date(task.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </td>
                 </tr>
               ))}

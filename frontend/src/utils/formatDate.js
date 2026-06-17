@@ -3,7 +3,7 @@ export function formatDate(dateStr, options = {}) {
   try {
     const date = new Date(dateStr.trim() + 'Z');
     if (isNaN(date.getTime())) return dateStr;
-    const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata', ...options };
+    const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', hour12: false, timeZone: 'Asia/Kolkata', ...options };
     if (options.time !== false) {
       dateOpts.hour = '2-digit';
       dateOpts.minute = '2-digit';
