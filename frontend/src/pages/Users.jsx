@@ -6,7 +6,10 @@ export default function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editUser, setEditUser] = useState(null);
   const [form, setForm] = useState({ username: '', password: '', name: '', role: 'technician', mobile: '' });
+  const [editForm, setEditForm] = useState({ name: '', mobile: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -38,6 +41,27 @@ export default function Users() {
     }
   };
 
+  const openEdit = (user) => {
+    setEditUser(user);
+    setEditForm({ name: user.name, mobile: user.mobile || '' });
+    setShowEdit(true);
+  };
+
+  const handleEdit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    try {
+      await usersAPI.update(editUser.id, editForm);
+      setSuccess(`User ${editUser.username} updated successfully!`);
+      setShowEdit(false);
+      setEditUser(null);
+      fetchUsers();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to update user.');
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -57,14 +81,15 @@ export default function Users() {
           <div className="table-container">
             <table>
               <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Username</th>
-                  <th>Name</th>
-                  <th>Role</th>
-                  <th>Mobile</th>
-                  <th>Created</th>
-                </tr>
+                  <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Mobile</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                  </tr>
               </thead>
               <tbody>
                 {users.map(u => (
@@ -75,6 +100,7 @@ export default function Users() {
                     <td><span className="badge badge-assigned">{u.role}</span></td>
                     <td>{u.mobile || '-'}</td>
                     <td style={{ fontSize: '0.8rem', color: '#999' }}>{formatDate(u.created_at)}</td>
+                    <td><button className="btn btn-sm btn-outline" onClick={() => openEdit(u)}>Edit</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -114,6 +140,32 @@ export default function Users() {
               <div className="form-actions">
                 <button type="button" className="btn btn-outline" onClick={() => setShowCreate(false)}>Cancel</button>
                 <button type="submit" className="btn btn-primary">Create User</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEdit && editUser && (
+        <div className="modal-overlay" onClick={() => setShowEdit(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Edit Technician</h2>
+            <form onSubmit={handleEdit}>
+              <div className="form-group">
+                <label>Username</label>
+                <input value={editUser.username} disabled style={{ opacity: 0.6 }} />
+              </div>
+              <div className="form-group">
+                <label>Full Name *</label>
+                <input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required />
+              </div>
+              <div className="form-group">
+                <label>Mobile</label>
+                <input value={editForm.mobile} onChange={e => setEditForm(f => ({ ...f, mobile: e.target.value }))} />
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn btn-outline" onClick={() => setShowEdit(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Changes</button>
               </div>
             </form>
           </div>

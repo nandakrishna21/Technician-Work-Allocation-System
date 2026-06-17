@@ -38,4 +38,19 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
   }
 });
 
+router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, mobile } = req.body;
+    if (!name) return res.status(400).json({ error: 'Name is required.' });
+
+    await db.execute('UPDATE users SET name = $1, mobile = $2 WHERE id = $3 AND role = $4',
+      [name, mobile || null, id, 'technician']);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Update user error:', err);
+    res.status(500).json({ error: 'Failed to update user.' });
+  }
+});
+
 module.exports = router;

@@ -31,7 +31,8 @@ export const authAPI = {
 
 export const usersAPI = {
   getTechnicians: () => api.get('/users/technicians'),
-  create: (data) => api.post('/users', data)
+  create: (data) => api.post('/users', data),
+  update: (id, data) => api.put(`/users/${id}`, data)
 };
 
 export const tasksAPI = {
