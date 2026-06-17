@@ -230,19 +230,14 @@ a { text-decoration: none; color: inherit; }
   min-height: 100vh;
   max-width: 1400px;
 }
-.live-clock {
-  position: fixed;
-  top: 0.75rem;
-  right: 1rem;
-  z-index: 1000;
-  font-size: 0.9rem;
+.sidebar-clock {
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text);
-  background: var(--card-bg);
-  padding: 0.4rem 0.85rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  padding: 0.4rem 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin-top: 0.25rem;
   font-variant-numeric: tabular-nums;
 }
 

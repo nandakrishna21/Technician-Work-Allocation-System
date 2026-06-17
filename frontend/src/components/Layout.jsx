@@ -66,14 +66,14 @@ export default function Layout() {
               <div className="user-role">{user?.role === 'admin' ? 'System Admin' : user?.role}</div>
             </div>
           </div>
+          <div className="sidebar-clock">
+            {time.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+          </div>
           <button onClick={logout} className="btn btn-sm sidebar-logout-btn">
             <span className="logout-icon">&#10149;</span> Sign Out
           </button>
         </div>
       </aside>
-      <div className="live-clock">
-        {time.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
-      </div>
       <main className="main-content">
         <Outlet />
       </main>
