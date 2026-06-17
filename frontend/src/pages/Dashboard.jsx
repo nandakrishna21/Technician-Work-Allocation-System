@@ -25,6 +25,11 @@ export default function Dashboard() {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
+  const goToNewTask = () => navigate('/tasks/create');
+  const viewAllTasks = () => navigate('/tasks');
+  const goToTask = (id) => () => navigate(`/tasks/${id}`);
+  const goToFiltered = (status) => () => navigate(`/tasks?status=${status}`);
+
   const loadData = () => {
     setLoading(true);
     Promise.all([dashboardAPI.get(), dashboardAPI.getActivity()])
@@ -39,6 +44,7 @@ export default function Dashboard() {
   useEffect(() => { loadData(); }, []);
 
   const handleReset = async () => {
+    setResetting(true);
     setShowResetConfirm(false);
     setResetError('');
     const emptyCounts = { CREATED: 0, ASSIGNED: 0, ACCEPTED: 0, IN_PROGRESS: 0, COMPLETED: 0, CLOSED: 0 };
@@ -50,6 +56,8 @@ export default function Dashboard() {
     } catch (err) {
       loadData();
       showToast(err.response?.data?.error || 'Failed to reset tasks.', 'error');
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -100,7 +108,7 @@ export default function Dashboard() {
         <div className="dash-welcome-actions">
           {user?.role === 'admin' && (
             <>
-              <button className="btn btn-primary" onClick={() => navigate('/tasks/create')}>+ New Task</button>
+              <button className="btn btn-primary" onClick={goToNewTask}>+ New Task</button>
               <button className="btn btn-outline" onClick={() => setShowResetConfirm(true)}>&#8634; Reset</button>
             </>
           )}
@@ -128,7 +136,7 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <div className="stats-grid">
         {Object.entries(STAT_CONFIG).map(([key, cfg]) => (
-          <div key={key} className={`stat-card ${cfg.cls}`} onClick={() => navigate(`/tasks?status=${key}`)}>
+          <div key={key} className={`stat-card ${cfg.cls}`} onClick={goToFiltered(key)}>
             <div className="stat-card-inner">
               <div className="stat-card-content">
                 <div className="stat-value">{counts[key] || 0}</div>
@@ -145,7 +153,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="card-header">
             <h3>Recent Tasks</h3>
-            <button className="btn btn-sm btn-outline" onClick={() => navigate('/tasks')}>View All</button>
+            <button className="btn btn-sm btn-outline" onClick={viewAllTasks}>View All</button>
           </div>
           {recentTasks.length === 0 ? (
             <div className="empty-state">No tasks created yet.</div>
@@ -164,7 +172,7 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {recentTasks.map(task => (
-                    <tr key={task.id} onClick={() => navigate(`/tasks/${task.id}`)}>
+                    <tr key={task.id} onClick={goToTask(task.id)}>
                       <td><strong>{task.id}</strong></td>
                       <td>{task.client_name}</td>
                       <td>{task.job_type}</td>
