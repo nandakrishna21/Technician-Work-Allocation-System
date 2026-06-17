@@ -15,17 +15,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
-function generateTaskId() {
-  const last = db.prepare('SELECT id FROM tasks ORDER BY created_at DESC LIMIT 1').get();
+async function generateTaskId() {
+  const last = await db.queryOne('SELECT id FROM tasks ORDER BY created_at DESC LIMIT 1');
   const num = last ? parseInt(last.id.split('-')[1]) + 1 : 1;
   return 'TASK-' + String(num).padStart(5, '0');
 }
 
-function logActivity(taskId, userId, action, details) {
-  db.prepare('INSERT INTO activity_logs (task_id, user_id, action, details) VALUES (?, ?, ?, ?)').run(taskId, userId, action, details || null);
+async function logActivity(taskId, userId, action, details) {
+  await db.execute('INSERT INTO activity_logs (task_id, user_id, action, details) VALUES ($1, $2, $3, $4)',
+    [taskId, userId, action, details || null]);
 }
 
-router.post('/', authenticate, authorize('admin'), upload.single('attachment'), (req, res) => {
+router.post('/', authenticate, authorize('admin'), upload.single('attachment'), async (req, res) => {
   try {
     const {
       client_name, contact_person, mobile_number, location,
@@ -36,17 +37,16 @@ router.post('/', authenticate, authorize('admin'), upload.single('attachment'), 
       return res.status(400).json({ error: 'Client name, location, and job type are required.' });
     }
 
-    const taskId = generateTaskId();
+    const taskId = await generateTaskId();
     const attachment = req.file ? req.file.filename : null;
 
-    db.prepare(`INSERT INTO tasks (id, client_name, contact_person, mobile_number, location, job_type, description, special_instructions, priority, attachment, created_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
-      taskId, client_name, contact_person || null, mobile_number || null, location,
-      job_type, description || null, special_instructions || null, priority || 'Medium',
-      attachment, req.user.id
-    );
+    await db.execute(`INSERT INTO tasks (id, client_name, contact_person, mobile_number, location, job_type, description, special_instructions, priority, attachment, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      [taskId, client_name, contact_person || null, mobile_number || null, location,
+        job_type, description || null, special_instructions || null, priority || 'Medium',
+        attachment, req.user.id]);
 
-    logActivity(taskId, req.user.id, 'TASK_CREATED', `Task created by ${req.user.name}`);
+    await logActivity(taskId, req.user.id, 'TASK_CREATED', `Task created by ${req.user.name}`);
 
     res.status(201).json({ id: taskId, message: 'Task created successfully.' });
   } catch (err) {
@@ -55,7 +55,7 @@ router.post('/', authenticate, authorize('admin'), upload.single('attachment'), 
   }
 });
 
-router.get('/', authenticate, (req, res) => {
+router.get('/', authenticate, async (req, res) => {
   try {
     const { status, technician, priority, date_from, date_to, search } = req.query;
     let query = `SELECT t.*, u.name as created_by_name FROM tasks t LEFT JOIN users u ON t.created_by = u.id WHERE 1=1`;
@@ -93,23 +93,26 @@ router.get('/', authenticate, (req, res) => {
 
     if (search) {
       query += ' AND (t.client_name LIKE ? OR t.job_type LIKE ? OR t.id LIKE ? OR t.location LIKE ?)';
-      const s = `%${search}%`;
+      const s = '%' + search + '%';
       params.push(s, s, s, s);
     }
 
-    if (req.user.role === 'admin' && req.query.technician_id) {
+    if (req.user.role === 'admin' && technician) {
       query += ' AND t.id IN (SELECT task_id FROM task_assignments WHERE technician_id = ?)';
-      params.push(req.query.technician_id);
+      params.push(technician);
     }
 
     query += ' ORDER BY t.created_at DESC';
 
-    const tasks = db.prepare(query).all(...params);
+    let paramIdx = 0;
+    query = query.replace(/\?/g, () => '$' + (++paramIdx));
 
-    const tasksWithAssignments = tasks.map(task => {
-      const techs = db.prepare(`SELECT u.id, u.name, u.mobile, ta.is_lead, ta.assigned_at FROM task_assignments ta INNER JOIN users u ON ta.technician_id = u.id WHERE ta.task_id = ?`).all(task.id);
+    const tasks = await db.query(query, params);
+
+    const tasksWithAssignments = await Promise.all(tasks.map(async (task) => {
+      const techs = await db.query(`SELECT u.id, u.name, u.mobile, ta.is_lead, ta.assigned_at FROM task_assignments ta INNER JOIN users u ON ta.technician_id = u.id WHERE ta.task_id = $1`, [task.id]);
       return { ...task, technicians: techs };
-    });
+    }));
 
     res.json(tasksWithAssignments);
   } catch (err) {
@@ -118,26 +121,26 @@ router.get('/', authenticate, (req, res) => {
   }
 });
 
-router.get('/:id', authenticate, (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
-    const task = db.prepare(`SELECT t.*, u.name as created_by_name,
+    const task = await db.queryOne(`SELECT t.*, u.name as created_by_name,
       a.name as assigned_by_name, c.name as completed_by_name, cl.name as closed_by_name
       FROM tasks t
       LEFT JOIN users u ON t.created_by = u.id
       LEFT JOIN users a ON t.assigned_by = a.id
       LEFT JOIN users c ON t.completed_by = c.id
       LEFT JOIN users cl ON t.closed_by = cl.id
-      WHERE t.id = ?`).get(req.params.id);
+      WHERE t.id = $1`, [req.params.id]);
 
     if (!task) return res.status(404).json({ error: 'Task not found.' });
 
-    const technicians = db.prepare(`SELECT u.id, u.name, u.mobile, ta.is_lead FROM task_assignments ta INNER JOIN users u ON ta.technician_id = u.id WHERE ta.task_id = ?`).all(task.id);
+    const technicians = await db.query(`SELECT u.id, u.name, u.mobile, ta.is_lead FROM task_assignments ta INNER JOIN users u ON ta.technician_id = u.id WHERE ta.task_id = $1`, [task.id]);
 
-    const logs = db.prepare(`SELECT al.*, u.name as user_name FROM activity_logs al LEFT JOIN users u ON al.user_id = u.id WHERE al.task_id = ? ORDER BY al.created_at DESC`).all(task.id);
+    const logs = await db.query(`SELECT al.*, u.name as user_name FROM activity_logs al LEFT JOIN users u ON al.user_id = u.id WHERE al.task_id = $1 ORDER BY al.created_at DESC`, [task.id]);
 
-    const notes = db.prepare(`SELECT tn.*, u.name as user_name FROM task_notes tn LEFT JOIN users u ON tn.user_id = u.id WHERE tn.task_id = ? ORDER BY tn.created_at DESC`).all(task.id);
+    const notes = await db.query(`SELECT tn.*, u.name as user_name FROM task_notes tn LEFT JOIN users u ON tn.user_id = u.id WHERE tn.task_id = $1 ORDER BY tn.created_at DESC`, [task.id]);
 
-    const photos = db.prepare(`SELECT tp.*, u.name as user_name FROM task_photos tp LEFT JOIN users u ON tp.user_id = u.id WHERE tp.task_id = ? ORDER BY tp.created_at DESC`).all(task.id);
+    const photos = await db.query(`SELECT tp.*, u.name as user_name FROM task_photos tp LEFT JOIN users u ON tp.user_id = u.id WHERE tp.task_id = $1 ORDER BY tp.created_at DESC`, [task.id]);
 
     res.json({ ...task, technicians, activity_logs: logs, notes, photos });
   } catch (err) {
@@ -146,9 +149,9 @@ router.get('/:id', authenticate, (req, res) => {
   }
 });
 
-router.put('/:id', authenticate, authorize('admin'), upload.single('attachment'), (req, res) => {
+router.put('/:id', authenticate, authorize('admin'), upload.single('attachment'), async (req, res) => {
   try {
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
 
     const {
@@ -158,21 +161,20 @@ router.put('/:id', authenticate, authorize('admin'), upload.single('attachment')
 
     const attachment = req.file ? req.file.filename : task.attachment;
 
-    db.prepare(`UPDATE tasks SET client_name=?, contact_person=?, mobile_number=?, location=?,
-      job_type=?, description=?, special_instructions=?, priority=?, attachment=? WHERE id=?`).run(
-      client_name || task.client_name,
-      contact_person !== undefined ? contact_person : task.contact_person,
-      mobile_number !== undefined ? mobile_number : task.mobile_number,
-      location || task.location,
-      job_type || task.job_type,
-      description !== undefined ? description : task.description,
-      special_instructions !== undefined ? special_instructions : task.special_instructions,
-      priority || task.priority,
-      attachment,
-      req.params.id
-    );
+    await db.execute(`UPDATE tasks SET client_name=$1, contact_person=$2, mobile_number=$3, location=$4,
+      job_type=$5, description=$6, special_instructions=$7, priority=$8, attachment=$9 WHERE id=$10`,
+      [client_name || task.client_name,
+        contact_person !== undefined ? contact_person : task.contact_person,
+        mobile_number !== undefined ? mobile_number : task.mobile_number,
+        location || task.location,
+        job_type || task.job_type,
+        description !== undefined ? description : task.description,
+        special_instructions !== undefined ? special_instructions : task.special_instructions,
+        priority || task.priority,
+        attachment,
+        req.params.id]);
 
-    logActivity(req.params.id, req.user.id, 'TASK_UPDATED', `Task updated by ${req.user.name}`);
+    await logActivity(req.params.id, req.user.id, 'TASK_UPDATED', `Task updated by ${req.user.name}`);
 
     res.json({ message: 'Task updated successfully.' });
   } catch (err) {
@@ -181,30 +183,36 @@ router.put('/:id', authenticate, authorize('admin'), upload.single('attachment')
   }
 });
 
-router.post('/:id/assign', authenticate, authorize('admin'), (req, res) => {
+router.post('/:id/assign', authenticate, authorize('admin'), async (req, res) => {
   try {
     const { technician_ids, lead_technician_id } = req.body;
     if (!technician_ids || !Array.isArray(technician_ids) || technician_ids.length === 0) {
       return res.status(400).json({ error: 'At least one technician must be assigned.' });
     }
 
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
 
-    const deleteStmt = db.prepare('DELETE FROM task_assignments WHERE task_id = ?');
-    const insertStmt = db.prepare('INSERT INTO task_assignments (task_id, technician_id, is_lead) VALUES (?, ?, ?)');
-
-    const transaction = db.transaction(() => {
-      deleteStmt.run(req.params.id);
-      technician_ids.forEach(techId => {
+    const client = await db.getClient();
+    try {
+      await client.query('BEGIN');
+      await client.query('DELETE FROM task_assignments WHERE task_id = $1', [req.params.id]);
+      for (const techId of technician_ids) {
         const isLead = lead_technician_id && techId == lead_technician_id ? 1 : 0;
-        insertStmt.run(req.params.id, techId, isLead);
-      });
-      db.prepare('UPDATE tasks SET status = ?, assigned_by = ?, assigned_at = datetime(\'now\') WHERE id = ?').run('ASSIGNED', req.user.id, req.params.id);
-    });
+        await client.query('INSERT INTO task_assignments (task_id, technician_id, is_lead) VALUES ($1, $2, $3)',
+          [req.params.id, techId, isLead]);
+      }
+      await client.query("UPDATE tasks SET status = $1, assigned_by = $2, assigned_at = NOW() WHERE id = $3",
+        ['ASSIGNED', req.user.id, req.params.id]);
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
 
-    transaction();
-    logActivity(req.params.id, req.user.id, 'TASK_ASSIGNED', `Task assigned to ${technician_ids.length} technician(s) by ${req.user.name}`);
+    await logActivity(req.params.id, req.user.id, 'TASK_ASSIGNED', `Task assigned to ${technician_ids.length} technician(s) by ${req.user.name}`);
 
     res.json({ message: 'Task assigned successfully.' });
   } catch (err) {
@@ -213,17 +221,18 @@ router.post('/:id/assign', authenticate, authorize('admin'), (req, res) => {
   }
 });
 
-router.post('/:id/accept', authenticate, authorize('technician'), (req, res) => {
+router.post('/:id/accept', authenticate, authorize('technician'), async (req, res) => {
   try {
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     if (task.status !== 'ASSIGNED') return res.status(400).json({ error: 'Task must be in ASSIGNED status.' });
 
-    const assignment = db.prepare('SELECT * FROM task_assignments WHERE task_id = ? AND technician_id = ?').get(req.params.id, req.user.id);
+    const assignment = await db.queryOne('SELECT * FROM task_assignments WHERE task_id = $1 AND technician_id = $2',
+      [req.params.id, req.user.id]);
     if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
 
-    db.prepare('UPDATE tasks SET status = ? WHERE id = ?').run('ACCEPTED', req.params.id);
-    logActivity(req.params.id, req.user.id, 'TASK_ACCEPTED', `Task accepted by ${req.user.name}`);
+    await db.execute('UPDATE tasks SET status = $1 WHERE id = $2', ['ACCEPTED', req.params.id]);
+    await logActivity(req.params.id, req.user.id, 'TASK_ACCEPTED', `Task accepted by ${req.user.name}`);
 
     res.json({ message: 'Task accepted successfully.' });
   } catch (err) {
@@ -232,14 +241,14 @@ router.post('/:id/accept', authenticate, authorize('technician'), (req, res) => 
   }
 });
 
-router.post('/:id/start', authenticate, authorize('technician'), (req, res) => {
+router.post('/:id/start', authenticate, authorize('technician'), async (req, res) => {
   try {
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     if (task.status !== 'ACCEPTED' && task.status !== 'IN_PROGRESS') return res.status(400).json({ error: 'Task must be in ACCEPTED or IN_PROGRESS status.' });
 
-    db.prepare('UPDATE tasks SET status = ? WHERE id = ?').run('IN_PROGRESS', req.params.id);
-    logActivity(req.params.id, req.user.id, 'WORK_STARTED', `Work started by ${req.user.name}`);
+    await db.execute('UPDATE tasks SET status = $1 WHERE id = $2', ['IN_PROGRESS', req.params.id]);
+    await logActivity(req.params.id, req.user.id, 'WORK_STARTED', `Work started by ${req.user.name}`);
 
     res.json({ message: 'Work started successfully.' });
   } catch (err) {
@@ -248,16 +257,18 @@ router.post('/:id/start', authenticate, authorize('technician'), (req, res) => {
   }
 });
 
-router.post('/:id/notes', authenticate, authorize('technician'), (req, res) => {
+router.post('/:id/notes', authenticate, authorize('technician'), async (req, res) => {
   try {
     const { note, is_progress } = req.body;
     if (!note) return res.status(400).json({ error: 'Note is required.' });
 
-    const assignment = db.prepare('SELECT * FROM task_assignments WHERE task_id = ? AND technician_id = ?').get(req.params.id, req.user.id);
+    const assignment = await db.queryOne('SELECT * FROM task_assignments WHERE task_id = $1 AND technician_id = $2',
+      [req.params.id, req.user.id]);
     if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
 
-    db.prepare('INSERT INTO task_notes (task_id, user_id, note, is_progress) VALUES (?, ?, ?, ?)').run(req.params.id, req.user.id, note, is_progress ? 1 : 0);
-    logActivity(req.params.id, req.user.id, 'NOTE_ADDED', `Note added by ${req.user.name}`);
+    await db.execute('INSERT INTO task_notes (task_id, user_id, note, is_progress) VALUES ($1, $2, $3, $4)',
+      [req.params.id, req.user.id, note, is_progress ? 1 : 0]);
+    await logActivity(req.params.id, req.user.id, 'NOTE_ADDED', `Note added by ${req.user.name}`);
 
     res.status(201).json({ message: 'Note added successfully.' });
   } catch (err) {
@@ -266,27 +277,29 @@ router.post('/:id/notes', authenticate, authorize('technician'), (req, res) => {
   }
 });
 
-router.post('/:id/complete', authenticate, authorize('technician'), upload.array('photos', 5), (req, res) => {
+router.post('/:id/complete', authenticate, authorize('technician'), upload.array('photos', 5), async (req, res) => {
   try {
     const { completion_notes } = req.body;
 
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     if (task.status !== 'IN_PROGRESS') return res.status(400).json({ error: 'Task must be in IN_PROGRESS status.' });
 
-    const assignment = db.prepare('SELECT * FROM task_assignments WHERE task_id = ? AND technician_id = ?').get(req.params.id, req.user.id);
+    const assignment = await db.queryOne('SELECT * FROM task_assignments WHERE task_id = $1 AND technician_id = $2',
+      [req.params.id, req.user.id]);
     if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
 
-    db.prepare('UPDATE tasks SET status = ?, completed_by = ?, completed_at = datetime(\'now\'), completion_notes = ? WHERE id = ?').run('COMPLETED', req.user.id, completion_notes || null, req.params.id);
+    await db.execute("UPDATE tasks SET status = $1, completed_by = $2, completed_at = NOW(), completion_notes = $3 WHERE id = $4",
+      ['COMPLETED', req.user.id, completion_notes || null, req.params.id]);
 
     if (req.files && req.files.length > 0) {
-      const insertPhoto = db.prepare('INSERT INTO task_photos (task_id, user_id, file_path, type) VALUES (?, ?, ?, ?)');
-      req.files.forEach(file => {
-        insertPhoto.run(req.params.id, req.user.id, file.filename, 'completion');
-      });
+      for (const file of req.files) {
+        await db.execute('INSERT INTO task_photos (task_id, user_id, file_path, type) VALUES ($1, $2, $3, $4)',
+          [req.params.id, req.user.id, file.filename, 'completion']);
+      }
     }
 
-    logActivity(req.params.id, req.user.id, 'TASK_COMPLETED', `Task marked complete by ${req.user.name}`);
+    await logActivity(req.params.id, req.user.id, 'TASK_COMPLETED', `Task marked complete by ${req.user.name}`);
 
     res.json({ message: 'Task marked as completed.' });
   } catch (err) {
@@ -295,14 +308,15 @@ router.post('/:id/complete', authenticate, authorize('technician'), upload.array
   }
 });
 
-router.post('/:id/approve', authenticate, authorize('admin'), (req, res) => {
+router.post('/:id/approve', authenticate, authorize('admin'), async (req, res) => {
   try {
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     if (task.status !== 'COMPLETED') return res.status(400).json({ error: 'Task must be in COMPLETED status.' });
 
-    db.prepare('UPDATE tasks SET status = ?, closed_by = ?, closed_at = datetime(\'now\') WHERE id = ?').run('CLOSED', req.user.id, req.params.id);
-    logActivity(req.params.id, req.user.id, 'TASK_CLOSED', `Task closed by ${req.user.name}`);
+    await db.execute("UPDATE tasks SET status = $1, closed_by = $2, closed_at = NOW() WHERE id = $3",
+      ['CLOSED', req.user.id, req.params.id]);
+    await logActivity(req.params.id, req.user.id, 'TASK_CLOSED', `Task closed by ${req.user.name}`);
 
     res.json({ message: 'Task closed successfully.' });
   } catch (err) {
@@ -311,14 +325,14 @@ router.post('/:id/approve', authenticate, authorize('admin'), (req, res) => {
   }
 });
 
-router.post('/:id/reopen', authenticate, authorize('admin'), (req, res) => {
+router.post('/:id/reopen', authenticate, authorize('admin'), async (req, res) => {
   try {
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     if (task.status !== 'COMPLETED') return res.status(400).json({ error: 'Task must be in COMPLETED status.' });
 
-    db.prepare('UPDATE tasks SET status = ? WHERE id = ?').run('IN_PROGRESS', req.params.id);
-    logActivity(req.params.id, req.user.id, 'TASK_REOPENED', `Task reopened by ${req.user.name}`);
+    await db.execute('UPDATE tasks SET status = $1 WHERE id = $2', ['IN_PROGRESS', req.params.id]);
+    await logActivity(req.params.id, req.user.id, 'TASK_REOPENED', `Task reopened by ${req.user.name}`);
 
     res.json({ message: 'Task reopened. Status set to IN PROGRESS.' });
   } catch (err) {
@@ -327,20 +341,21 @@ router.post('/:id/reopen', authenticate, authorize('admin'), (req, res) => {
   }
 });
 
-router.post('/:id/clarify', authenticate, authorize('technician'), (req, res) => {
+router.post('/:id/clarify', authenticate, authorize('technician'), async (req, res) => {
   try {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'Clarification message is required.' });
 
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     if (task.status !== 'ACCEPTED' && task.status !== 'IN_PROGRESS') return res.status(400).json({ error: 'Task must be in ACCEPTED or IN_PROGRESS status.' });
 
-    const assignment = db.prepare('SELECT * FROM task_assignments WHERE task_id = ? AND technician_id = ?').get(req.params.id, req.user.id);
+    const assignment = await db.queryOne('SELECT * FROM task_assignments WHERE task_id = $1 AND technician_id = $2',
+      [req.params.id, req.user.id]);
     if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
 
-    db.prepare('UPDATE tasks SET clarification_request = ? WHERE id = ?').run(message, req.params.id);
-    logActivity(req.params.id, req.user.id, 'CLARIFICATION_REQUESTED', `Clarification requested by ${req.user.name}: ${message}`);
+    await db.execute('UPDATE tasks SET clarification_request = $1 WHERE id = $2', [message, req.params.id]);
+    await logActivity(req.params.id, req.user.id, 'CLARIFICATION_REQUESTED', `Clarification requested by ${req.user.name}: ${message}`);
 
     res.json({ message: 'Clarification request submitted.' });
   } catch (err) {
@@ -349,17 +364,17 @@ router.post('/:id/clarify', authenticate, authorize('technician'), (req, res) =>
   }
 });
 
-router.post('/:id/respond', authenticate, authorize('admin'), (req, res) => {
+router.post('/:id/respond', authenticate, authorize('admin'), async (req, res) => {
   try {
     const { message } = req.body;
     if (!message) return res.status(400).json({ error: 'Response message is required.' });
 
-    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     if (!task.clarification_request) return res.status(400).json({ error: 'No pending clarification request.' });
 
-    db.prepare('UPDATE tasks SET clarification_response = ? WHERE id = ?').run(message, req.params.id);
-    logActivity(req.params.id, req.user.id, 'CLARIFICATION_RESPONDED', `Clarification responded by ${req.user.name}: ${message}`);
+    await db.execute('UPDATE tasks SET clarification_response = $1 WHERE id = $2', [message, req.params.id]);
+    await logActivity(req.params.id, req.user.id, 'CLARIFICATION_RESPONDED', `Clarification responded by ${req.user.name}: ${message}`);
 
     res.json({ message: 'Response submitted.' });
   } catch (err) {
@@ -368,13 +383,13 @@ router.post('/:id/respond', authenticate, authorize('admin'), (req, res) => {
   }
 });
 
-router.post('/reset-all', authenticate, authorize('admin'), (req, res) => {
+router.post('/reset-all', authenticate, authorize('admin'), async (req, res) => {
   try {
-    db.exec(`DELETE FROM task_photos`);
-    db.exec(`DELETE FROM task_notes`);
-    db.exec(`DELETE FROM activity_logs`);
-    db.exec(`DELETE FROM task_assignments`);
-    db.exec(`DELETE FROM tasks`);
+    await db.execute('DELETE FROM task_photos');
+    await db.execute('DELETE FROM task_notes');
+    await db.execute('DELETE FROM activity_logs');
+    await db.execute('DELETE FROM task_assignments');
+    await db.execute('DELETE FROM tasks');
 
     res.json({ message: 'All tasks have been reset successfully.' });
   } catch (err) {

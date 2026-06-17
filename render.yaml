@@ -10,3 +10,9 @@ services:
         value: 22
       - key: JWT_SECRET
         generateValue: true
+
+databases:
+  - name: technician-work-allocation-db
+    plan: free
+    databaseType: postgresql
+    ipAllowList: []
