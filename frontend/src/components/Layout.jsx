@@ -57,7 +57,7 @@ export default function Layout() {
             <div className="sidebar-avatar">{user?.name?.[0]?.toUpperCase() || 'U'}</div>
             <div className="sidebar-user-info">
               <div className="user-name">{user?.name}</div>
-              <div className="user-role">{user?.role}</div>
+              <div className="user-role">{user?.role === 'admin' ? 'System Admin' : user?.role}</div>
             </div>
           </div>
           <button onClick={logout} className="btn btn-sm sidebar-logout-btn">
