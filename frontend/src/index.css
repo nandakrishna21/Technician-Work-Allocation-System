@@ -230,20 +230,19 @@ a { text-decoration: none; color: inherit; }
   min-height: 100vh;
   max-width: 1400px;
 }
-.main-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
 .live-clock {
-  font-size: 1rem;
+  position: fixed;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 1000;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text);
   background: var(--card-bg);
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.85rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   font-variant-numeric: tabular-nums;
 }
 

@@ -71,13 +71,10 @@ export default function Layout() {
           </button>
         </div>
       </aside>
+      <div className="live-clock">
+        {time.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+      </div>
       <main className="main-content">
-        <div className="main-header">
-          <div />
-          <div className="live-clock">
-            {time.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
-          </div>
-        </div>
         <Outlet />
       </main>
     </div>
