@@ -96,7 +96,7 @@ export default function Dashboard() {
       {/* Welcome Banner */}
       <div className="dash-welcome">
         <div className="dash-welcome-text">
-          <h2>{getGreeting()}, {user?.name?.split(' ')[0] || 'User'}</h2>
+          <h2>{getGreeting()}, {user?.role === 'admin' ? 'Admin' : user?.name?.split(' ')[0] || 'User'}</h2>
           <p>{totalTasks > 0 ? `You have ${totalActive} active task${totalActive !== 1 ? 's' : ''} and ${totalDone} completed.` : 'No tasks yet. Create your first task to get started.'}</p>
         </div>
         <div className="dash-welcome-actions">

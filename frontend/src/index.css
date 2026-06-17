@@ -247,14 +247,14 @@ a { text-decoration: none; color: inherit; }
 
 /* Dashboard Welcome */
 .dash-welcome {
-  background: linear-gradient(135deg, var(--primary), #7c3aed);
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
   border-radius: 16px;
   padding: 1.75rem 2rem;
   margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #fff;
+  color: var(--text);
   position: relative;
   overflow: hidden;
 }
@@ -270,8 +270,8 @@ a { text-decoration: none; color: inherit; }
 .dash-welcome h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.25rem; position: relative; }
 .dash-welcome p { font-size: 0.85rem; opacity: 0.85; position: relative; }
 .dash-welcome .btn { position: relative; }
-.dash-welcome .btn-outline { border-color: rgba(255,255,255,0.3); color: #fff; }
-.dash-welcome .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
+.dash-welcome .btn-outline { border-color: var(--primary); color: var(--primary); }
+.dash-welcome .btn-outline:hover { background: var(--primary-light); border-color: var(--primary-dark); }
 .dash-welcome-actions { display: flex; gap: 0.75rem; flex-shrink: 0; }
 
 /* Dashboard Summary */
