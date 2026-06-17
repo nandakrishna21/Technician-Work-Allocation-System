@@ -12,7 +12,7 @@ export default function TaskList() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [technicians, setTechnicians] = useState([]);
-  const [filters, setFilters] = useState({ status: initialStatus, priority: '', search: '', technician_id: '', date_from: '', date_to: '' });
+  const [filters, setFilters] = useState({ status: initialStatus, priority: '', search: '', technician_id: '', date_from: '' });
   const { user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -32,7 +32,6 @@ export default function TaskList() {
     if (f.search) params.search = f.search;
     if (f.technician_id) params.technician_id = f.technician_id;
     if (f.date_from) params.date_from = f.date_from;
-    if (f.date_to) params.date_to = f.date_to;
 
     tasksAPI.getAll(params)
       .then(res => setTasks(res.data))
@@ -40,12 +39,12 @@ export default function TaskList() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { fetchTasks(); }, [filters.status, filters.priority, filters.search, filters.technician_id, filters.date_from, filters.date_to]);
+  useEffect(() => { fetchTasks(); }, [filters.status, filters.priority, filters.search, filters.technician_id, filters.date_from]);
 
   const handleFilter = () => fetchTasks();
 
   const clearFilters = () => {
-    setFilters({ status: '', priority: '', search: '', technician_id: '', date_from: '', date_to: '' });
+    setFilters({ status: '', priority: '', search: '', technician_id: '', date_from: '' });
     navigate('/tasks');
   };
 
@@ -135,13 +134,7 @@ export default function TaskList() {
             type="date"
             value={filters.date_from}
             onChange={e => setFilters(f => ({ ...f, date_from: e.target.value }))}
-            title="From date"
-          />
-          <input
-            type="date"
-            value={filters.date_to}
-            onChange={e => setFilters(f => ({ ...f, date_to: e.target.value }))}
-            title="To date"
+            title="Filter by date"
           />
           <button className="btn btn-sm btn-outline" onClick={clearFilters}>Clear</button>
         </div>
