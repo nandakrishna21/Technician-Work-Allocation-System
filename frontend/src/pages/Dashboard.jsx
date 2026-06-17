@@ -25,10 +25,12 @@ export default function Dashboard() {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const goToNewTask = () => navigate('/tasks/create');
-  const viewAllTasks = () => navigate('/tasks');
-  const goToTask = (id) => () => navigate(`/tasks/${id}`);
-  const goToFiltered = (status) => () => navigate(`/tasks?status=${status}`);
+  const goToNewTask = (e) => { e?.preventDefault(); navigate('/tasks/create'); };
+  const viewAllTasks = (e) => { e?.preventDefault(); navigate('/tasks'); };
+  const goToTask = (id) => (e) => { e?.preventDefault(); navigate(`/tasks/${id}`); };
+  const goToFiltered = (status) => (e) => { e?.preventDefault(); navigate(`/tasks?status=${status}`); };
+  const openReset = () => { setShowResetConfirm(true); };
+  const closeReset = () => { if (!resetting) setShowResetConfirm(false); };
 
   const loadData = () => {
     setLoading(true);
@@ -108,8 +110,8 @@ export default function Dashboard() {
         <div className="dash-welcome-actions">
           {user?.role === 'admin' && (
             <>
-              <button className="btn btn-primary" onClick={goToNewTask}>+ New Task</button>
-              <button className="btn btn-outline" onClick={() => setShowResetConfirm(true)}>&#8634; Reset</button>
+              <button type="button" className="btn btn-primary" onClick={goToNewTask}>+ New Task</button>
+              <button type="button" className="btn btn-outline" onClick={openReset}>&#8634; Reset</button>
             </>
           )}
         </div>
@@ -212,7 +214,7 @@ export default function Dashboard() {
 
       {/* Reset Modal */}
       {showResetConfirm && (
-        <div className="modal-overlay" onClick={() => !resetting && setShowResetConfirm(false)}>
+        <div className="modal-overlay" onClick={closeReset}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '400px' }}>
             <h2>Reset All Tasks?</h2>
             {resetError && <div className="error-message">{resetError}</div>}
@@ -220,8 +222,8 @@ export default function Dashboard() {
               This will permanently delete all tasks, assignments, notes, photos, and activity logs. Users will be preserved. This action cannot be undone.
             </p>
             <div className="form-actions">
-              <button className="btn btn-outline" onClick={() => setShowResetConfirm(false)} disabled={resetting}>Cancel</button>
-              <button className="btn btn-danger" onClick={handleReset} disabled={resetting}>
+              <button type="button" className="btn btn-outline" onClick={closeReset} disabled={resetting}>Cancel</button>
+              <button type="button" className="btn btn-danger" onClick={handleReset} disabled={resetting}>
                 {resetting ? 'Resetting...' : 'Yes, Reset Everything'}
               </button>
             </div>
