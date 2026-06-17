@@ -265,6 +265,7 @@ a { text-decoration: none; color: inherit; }
   border-radius: 50%;
   background: rgba(255,255,255,0.05);
   top: -100px; right: -50px;
+  pointer-events: none;
 }
 .dash-welcome h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.25rem; position: relative; }
 .dash-welcome p { font-size: 0.85rem; opacity: 0.85; position: relative; }
@@ -386,6 +387,7 @@ a { text-decoration: none; color: inherit; }
   right: 0;
   height: 3px;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  pointer-events: none;
 }
 .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 .stat-card .stat-value { font-size: 2rem; font-weight: 700; margin-bottom: 0.15rem; letter-spacing: -0.03em; }
