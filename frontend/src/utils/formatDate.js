@@ -1,7 +1,8 @@
 export function formatDate(dateStr, options = {}) {
   if (!dateStr) return '';
   try {
-    const date = new Date(dateStr.trim() + 'Z');
+    const raw = dateStr.trim();
+    const date = new Date(raw.endsWith('Z') ? raw : raw + 'Z');
     if (isNaN(date.getTime())) return dateStr;
     const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', hour12: false, timeZone: 'Asia/Kolkata', ...options };
     if (options.time !== false) {
