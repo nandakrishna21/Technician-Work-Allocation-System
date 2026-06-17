@@ -57,7 +57,7 @@ router.post('/', authenticate, authorize('admin'), upload.single('attachment'), 
 
 router.get('/', authenticate, async (req, res) => {
   try {
-    const { status, technician, priority, date_from, date_to, search } = req.query;
+    const { status, technician_id, priority, date_from, date_to, search } = req.query;
     let query = `SELECT t.*, u.name as created_by_name FROM tasks t LEFT JOIN users u ON t.created_by = u.id WHERE 1=1`;
     const params = [];
 
@@ -97,9 +97,9 @@ router.get('/', authenticate, async (req, res) => {
       params.push(s, s, s, s);
     }
 
-    if (req.user.role === 'admin' && technician) {
+    if (req.user.role === 'admin' && technician_id) {
       query += ' AND t.id IN (SELECT task_id FROM task_assignments WHERE technician_id = ?)';
-      params.push(technician);
+      params.push(technician_id);
     }
 
     query += ' ORDER BY t.created_at DESC';
