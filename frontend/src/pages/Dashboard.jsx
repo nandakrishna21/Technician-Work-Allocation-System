@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { dashboardAPI, tasksAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -25,11 +25,9 @@ export default function Dashboard() {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const goToNewTask = (e) => { e?.preventDefault(); navigate('/tasks/create'); };
-  const viewAllTasks = (e) => { e?.preventDefault(); navigate('/tasks'); };
-  const goToTask = (id) => (e) => { e?.preventDefault(); navigate(`/tasks/${id}`); };
-  const goToFiltered = (status) => (e) => { e?.preventDefault(); navigate(`/tasks?status=${status}`); };
-  const openReset = () => { setShowResetConfirm(true); };
+  const viewAllTasks = () => navigate('/tasks');
+  const goToFiltered = (status) => () => navigate(`/tasks?status=${status}`);
+  const openReset = () => setShowResetConfirm(true);
   const closeReset = () => { if (!resetting) setShowResetConfirm(false); };
 
   const loadData = () => {
@@ -110,7 +108,7 @@ export default function Dashboard() {
         <div className="dash-welcome-actions">
           {user?.role === 'admin' && (
             <>
-              <button type="button" className="btn btn-primary" onClick={goToNewTask}>+ New Task</button>
+              <Link to="/tasks/create" className="btn btn-primary" style={{ textDecoration: 'none' }}>+ New Task</Link>
               <button type="button" className="btn btn-outline" onClick={openReset}>&#8634; Reset</button>
             </>
           )}
@@ -138,7 +136,7 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <div className="stats-grid">
         {Object.entries(STAT_CONFIG).map(([key, cfg]) => (
-          <div key={key} className={`stat-card ${cfg.cls}`} onClick={goToFiltered(key)}>
+          <Link key={key} to={`/tasks?status=${key}`} className={`stat-card ${cfg.cls}`} style={{ textDecoration: 'none' }}>
             <div className="stat-card-inner">
               <div className="stat-card-content">
                 <div className="stat-value">{counts[key] || 0}</div>
@@ -146,8 +144,8 @@ export default function Dashboard() {
               </div>
               <div className="stat-card-icon">{cfg.icon}</div>
             </div>
-          </div>
-        ))}
+            </Link>
+          ))}
       </div>
 
       {/* Recent Tasks + Activity */}
@@ -155,7 +153,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="card-header">
             <h3>Recent Tasks</h3>
-            <button className="btn btn-sm btn-outline" onClick={viewAllTasks}>View All</button>
+            <Link to="/tasks" className="btn btn-sm btn-outline" style={{ textDecoration: 'none' }}>View All</Link>
           </div>
           {recentTasks.length === 0 ? (
             <div className="empty-state">No tasks created yet.</div>
@@ -174,7 +172,7 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {recentTasks.map(task => (
-                    <tr key={task.id} onClick={goToTask(task.id)}>
+                    <tr key={task.id} onClick={() => navigate(`/tasks/${task.id}`)} style={{ cursor: 'pointer' }}>
                       <td><strong>{task.id}</strong></td>
                       <td>{task.client_name}</td>
                       <td>{task.job_type}</td>
