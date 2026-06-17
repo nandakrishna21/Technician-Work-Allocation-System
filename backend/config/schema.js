@@ -33,7 +33,9 @@ function initializeDatabase() {
       completed_at DATETIME,
       closed_by INTEGER REFERENCES users(id),
       closed_at DATETIME,
-      completion_notes TEXT
+      completion_notes TEXT,
+      clarification_request TEXT,
+      clarification_response TEXT
     );
 
     CREATE TABLE IF NOT EXISTS task_assignments (
@@ -71,6 +73,9 @@ function initializeDatabase() {
       created_at DATETIME DEFAULT (datetime('now', 'utc'))
     );
   `);
+
+  try { db.exec("ALTER TABLE tasks ADD COLUMN clarification_request TEXT"); } catch(e) {}
+  try { db.exec("ALTER TABLE tasks ADD COLUMN clarification_response TEXT"); } catch(e) {}
 
   const adminExists = db.prepare('SELECT id FROM users WHERE username = ?').get('admin');
   if (!adminExists) {

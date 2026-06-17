@@ -957,6 +957,13 @@ tbody tr:active { background: color-mix(in srgb, var(--primary-light) 80%, trans
 .filter-bar input, .filter-bar select { transition: all var(--transition); }
 .filter-bar input:focus, .filter-bar select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
 
+/* Clarification Boxes */
+.clarify-box { padding: 0.75rem; border-radius: var(--radius); margin-top: 0.25rem; font-size: 0.9rem; line-height: 1.5; }
+.clarify-box.request { background: #fff7ed; border: 1px solid #fed7aa; }
+.clarify-box.response { background: #f0fdf4; border: 1px solid #bbf7d0; }
+[data-theme="dark"] .clarify-box.request { background: #3d2e1e; border-color: #78350f; color: #fed7aa; }
+[data-theme="dark"] .clarify-box.response { background: #1a3d2e; border-color: #065f46; color: #d1fae5; }
+
 /* Form focus refinement */
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
 

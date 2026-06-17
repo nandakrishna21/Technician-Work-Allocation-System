@@ -97,6 +97,11 @@ router.get('/', authenticate, (req, res) => {
       params.push(s, s, s, s);
     }
 
+    if (req.user.role === 'admin' && req.query.technician_id) {
+      query += ' AND t.id IN (SELECT task_id FROM task_assignments WHERE technician_id = ?)';
+      params.push(req.query.technician_id);
+    }
+
     query += ' ORDER BY t.created_at DESC';
 
     const tasks = db.prepare(query).all(...params);
@@ -319,6 +324,47 @@ router.post('/:id/reopen', authenticate, authorize('admin'), (req, res) => {
   } catch (err) {
     console.error('Reopen task error:', err);
     res.status(500).json({ error: 'Failed to reopen task.' });
+  }
+});
+
+router.post('/:id/clarify', authenticate, authorize('technician'), (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: 'Clarification message is required.' });
+
+    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    if (!task) return res.status(404).json({ error: 'Task not found.' });
+    if (task.status !== 'ACCEPTED' && task.status !== 'IN_PROGRESS') return res.status(400).json({ error: 'Task must be in ACCEPTED or IN_PROGRESS status.' });
+
+    const assignment = db.prepare('SELECT * FROM task_assignments WHERE task_id = ? AND technician_id = ?').get(req.params.id, req.user.id);
+    if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
+
+    db.prepare('UPDATE tasks SET clarification_request = ? WHERE id = ?').run(message, req.params.id);
+    logActivity(req.params.id, req.user.id, 'CLARIFICATION_REQUESTED', `Clarification requested by ${req.user.name}: ${message}`);
+
+    res.json({ message: 'Clarification request submitted.' });
+  } catch (err) {
+    console.error('Clarify error:', err);
+    res.status(500).json({ error: 'Failed to submit clarification request.' });
+  }
+});
+
+router.post('/:id/respond', authenticate, authorize('admin'), (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: 'Response message is required.' });
+
+    const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    if (!task) return res.status(404).json({ error: 'Task not found.' });
+    if (!task.clarification_request) return res.status(400).json({ error: 'No pending clarification request.' });
+
+    db.prepare('UPDATE tasks SET clarification_response = ? WHERE id = ?').run(message, req.params.id);
+    logActivity(req.params.id, req.user.id, 'CLARIFICATION_RESPONDED', `Clarification responded by ${req.user.name}: ${message}`);
+
+    res.json({ message: 'Response submitted.' });
+  } catch (err) {
+    console.error('Respond error:', err);
+    res.status(500).json({ error: 'Failed to submit response.' });
   }
 });
 

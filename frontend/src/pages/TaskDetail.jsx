@@ -25,6 +25,11 @@ export default function TaskDetail() {
   const [editForm, setEditForm] = useState({});
   const [editAttachment, setEditAttachment] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
+  const [showClarifyModal, setShowClarifyModal] = useState(false);
+  const [clarifyMessage, setClarifyMessage] = useState('');
+  const [clarifyLoading, setClarifyLoading] = useState(false);
+  const [respondMessage, setRespondMessage] = useState('');
+  const [respondLoading, setRespondLoading] = useState(false);
 
   const fetchTask = () => {
     setLoading(true);
@@ -181,6 +186,37 @@ export default function TaskDetail() {
     }
   };
 
+  const handleClarify = async () => {
+    if (!clarifyMessage.trim()) return;
+    setClarifyLoading(true);
+    try {
+      await tasksAPI.clarify(id, { message: clarifyMessage });
+      showToast('Clarification request sent to admin.', 'success');
+      setShowClarifyModal(false);
+      setClarifyMessage('');
+      fetchTask();
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to send request.', 'error');
+    } finally {
+      setClarifyLoading(false);
+    }
+  };
+
+  const handleRespond = async () => {
+    if (!respondMessage.trim()) return;
+    setRespondLoading(true);
+    try {
+      await tasksAPI.respond(id, { message: respondMessage });
+      showToast('Response sent to technician.', 'success');
+      setRespondMessage('');
+      fetchTask();
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to send response.', 'error');
+    } finally {
+      setRespondLoading(false);
+    }
+  };
+
   const statusBadge = (status) => {
     const map = {
       CREATED: 'badge-created', ASSIGNED: 'badge-assigned', ACCEPTED: 'badge-accepted',
@@ -225,8 +261,11 @@ export default function TaskDetail() {
           {user?.role === 'technician' && task.status === 'ASSIGNED' && (
             <button className="btn btn-success" onClick={handleAccept}>Accept Task</button>
           )}
-          {user?.role === 'technician' && (task.status === 'ACCEPTED' || task.status === 'IN_PROGRESS') && task.status !== 'IN_PROGRESS' && (
+          {user?.role === 'technician' && task.status === 'ACCEPTED' && (
             <button className="btn btn-primary" onClick={handleStart}>Start Work</button>
+          )}
+          {user?.role === 'technician' && (task.status === 'ACCEPTED' || task.status === 'IN_PROGRESS') && (
+            <button className="btn btn-outline" onClick={() => setShowClarifyModal(true)}>&#63; Request Clarification</button>
           )}
         </div>
 
@@ -347,6 +386,40 @@ export default function TaskDetail() {
                 ) : 'Not assigned yet.'}
               </div>
             </div>
+            {task.clarification_request && (
+              <div className="detail-item full">
+                <label>Clarification Request</label>
+                <div className="value clarify-box request">
+                  {task.clarification_request}
+                </div>
+              </div>
+            )}
+            {task.clarification_response && (
+              <div className="detail-item full">
+                <label>Clarification Response</label>
+                <div className="value clarify-box response">
+                  {task.clarification_response}
+                </div>
+              </div>
+            )}
+            {user?.role === 'admin' && task.clarification_request && !task.clarification_response && (
+              <div className="detail-item full">
+                <label>Respond to Clarification</label>
+                <div style={{ marginTop: '0.25rem' }}>
+                  <textarea
+                    className="respond-textarea"
+                    value={respondMessage}
+                    onChange={e => setRespondMessage(e.target.value)}
+                    placeholder="Type your response here..."
+                    rows={3}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '0.9rem', background: 'var(--card-bg)', color: 'var(--text)', resize: 'vertical' }}
+                  />
+                  <button className="btn btn-primary" onClick={handleRespond} disabled={respondLoading || !respondMessage.trim()} style={{ marginTop: '0.5rem' }}>
+                    {respondLoading ? 'Sending...' : 'Send Response'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -500,6 +573,31 @@ export default function TaskDetail() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Clarify Modal */}
+      {showClarifyModal && (
+        <div className="modal-overlay" onClick={() => !clarifyLoading && setShowClarifyModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '480px' }}>
+            <h2>Request Clarification</h2>
+            <p style={{ marginBottom: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Describe what additional information you need from the admin.</p>
+            <div className="form-group">
+              <textarea
+                value={clarifyMessage}
+                onChange={e => setClarifyMessage(e.target.value)}
+                placeholder="I need more details about..."
+                rows={4}
+                style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '0.9rem', background: 'var(--card-bg)', color: 'var(--text)', resize: 'vertical' }}
+              />
+            </div>
+            <div className="form-actions">
+              <button className="btn btn-outline" onClick={() => setShowClarifyModal(false)} disabled={clarifyLoading}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleClarify} disabled={clarifyLoading || !clarifyMessage.trim()}>
+                {clarifyLoading ? 'Sending...' : 'Send Request'}
+              </button>
+            </div>
           </div>
         </div>
       )}
