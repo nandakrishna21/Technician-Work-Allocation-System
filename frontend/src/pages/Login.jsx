@@ -132,8 +132,8 @@ export default function Login() {
         )}
 
         <div className="login-footer">
-          <span>TechWorkFlow v1.0</span>
-          <span>Secure System</span>
+          <span>Nanda Krishna &copy; 2026</span>
+          <span>All rights reserved</span>
         </div>
       </div>
     </div>
