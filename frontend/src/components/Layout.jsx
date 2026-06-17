@@ -23,7 +23,7 @@ export default function Layout() {
         <div className="sidebar-brand">
           <div className="sidebar-logo">TW</div>
           <div className="sidebar-brand-text">
-            <h2>TechWorkFlow</h2>
+            <h2>Technician</h2>
             <small>Work Allocation System</small>
           </div>
         </div>
