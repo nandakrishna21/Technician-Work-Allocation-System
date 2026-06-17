@@ -217,7 +217,7 @@ export function TaskDetail() {
             </div>
             <p className="text-sm text-gray-500 mt-1">
               Created by {task.createdBy.name} on{" "}
-              {new Date(task.createdAt).toLocaleString()}
+              {new Date(task.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
             </p>
           </div>
           {user?.role === "ADMIN" && !editMode && (
@@ -566,7 +566,7 @@ export function TaskDetail() {
             )}
             {task.completedAt && (
               <p className="text-sm text-gray-500">
-                Completed on: {new Date(task.completedAt).toLocaleString()}
+                Completed on: {new Date(task.completedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
               </p>
             )}
             <div className="flex gap-3">
@@ -633,8 +633,8 @@ export function TaskDetail() {
                 </div>
                 <span className="text-xs text-gray-400">
                   {assignment.acceptedAt
-                    ? `Accepted: ${new Date(assignment.acceptedAt).toLocaleString()}`
-                    : `Assigned: ${new Date(assignment.assignedAt).toLocaleString()}`}
+                    ? `Accepted: ${new Date(assignment.acceptedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+                    : `Assigned: ${new Date(assignment.assignedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`}
                 </span>
               </div>
             ))}
@@ -656,7 +656,7 @@ export function TaskDetail() {
                   <p className="text-sm text-gray-500 mt-0.5">{log.details}</p>
                 )}
                 <p className="text-xs text-gray-400 mt-0.5">
-                  {new Date(log.createdAt).toLocaleString()}
+                  {new Date(log.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                 </p>
               </div>
             </div>

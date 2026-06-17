@@ -82,7 +82,7 @@ export default function Dashboard() {
   const { counts, totalTasks, recentTasks } = data;
 
   const getGreeting = () => {
-    const h = new Date().getHours();
+    const h = parseInt(new Date().toLocaleString('en-IN', { hour: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' }));
     if (h < 12) return 'Good morning';
     if (h < 17) return 'Good afternoon';
     return 'Good evening';

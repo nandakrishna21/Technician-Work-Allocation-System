@@ -3,12 +3,12 @@ export function formatDate(dateStr, options = {}) {
   try {
     const date = new Date(dateStr.trim() + 'Z');
     if (isNaN(date.getTime())) return dateStr;
-    const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', ...options };
+    const dateOpts = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata', ...options };
     if (options.time !== false) {
       dateOpts.hour = '2-digit';
       dateOpts.minute = '2-digit';
     }
-    return date.toLocaleDateString(undefined, dateOpts);
+    return date.toLocaleDateString('en-IN', dateOpts);
   } catch {
     return dateStr;
   }
