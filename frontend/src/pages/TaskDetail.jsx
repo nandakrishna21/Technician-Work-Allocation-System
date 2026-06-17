@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tasksAPI, usersAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { formatDate } from '../utils/formatDate';
 
 export default function TaskDetail() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,6 +21,10 @@ export default function TaskDetail() {
   const [selectedTechs, setSelectedTechs] = useState([]);
   const [leadTech, setLeadTech] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [editAttachment, setEditAttachment] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   const fetchTask = () => {
     setLoading(true);
@@ -30,6 +37,7 @@ export default function TaskDetail() {
   useEffect(() => { fetchTask(); }, [id]);
 
   const showMessage = (type, text) => {
+    showToast(text, type === 'error' ? 'error' : type === 'success' ? 'success' : 'info');
     setMessage({ type, text });
     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
@@ -136,6 +144,43 @@ export default function TaskDetail() {
     );
   };
 
+  const openEditModal = () => {
+    setEditForm({
+      client_name: task.client_name || '',
+      contact_person: task.contact_person || '',
+      mobile_number: task.mobile_number || '',
+      location: task.location || '',
+      job_type: task.job_type || '',
+      description: task.description || '',
+      special_instructions: task.special_instructions || '',
+      priority: task.priority || 'Medium'
+    });
+    setEditAttachment(null);
+    setShowEditModal(true);
+  };
+
+  const handleEditChange = (e) => {
+    setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditLoading(true);
+    try {
+      const formData = new FormData();
+      Object.entries(editForm).forEach(([key, value]) => { formData.append(key, value); });
+      if (editAttachment) formData.append('attachment', editAttachment);
+      await tasksAPI.update(id, formData);
+      showToast('Task updated successfully!', 'success');
+      setShowEditModal(false);
+      fetchTask();
+    } catch (err) {
+      showToast(err.response?.data?.error || 'Failed to update task.', 'error');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const statusBadge = (status) => {
     const map = {
       CREATED: 'badge-created', ASSIGNED: 'badge-assigned', ACCEPTED: 'badge-accepted',
@@ -173,6 +218,9 @@ export default function TaskDetail() {
               <button className="btn btn-success" onClick={handleApprove}>Approve & Close</button>
               <button className="btn btn-warning" onClick={handleReopen}>Reopen Task</button>
             </>
+          )}
+          {user?.role === 'admin' && task.status !== 'CLOSED' && (
+            <button className="btn btn-outline" onClick={openEditModal}>&#9998; Edit</button>
           )}
           {user?.role === 'technician' && task.status === 'ASSIGNED' && (
             <button className="btn btn-success" onClick={handleAccept}>Accept Task</button>
@@ -225,7 +273,7 @@ export default function TaskDetail() {
             </div>
             <div className="detail-item">
               <label>Created At</label>
-              <div className="value">{task.created_at}</div>
+               <div className="value">{formatDate(task.created_at)}</div>
             </div>
             {task.assigned_by_name && (
               <>
@@ -235,7 +283,7 @@ export default function TaskDetail() {
                 </div>
                 <div className="detail-item">
                   <label>Assigned At</label>
-                  <div className="value">{task.assigned_at}</div>
+                  <div className="value">{formatDate(task.assigned_at)}</div>
                 </div>
               </>
             )}
@@ -247,7 +295,7 @@ export default function TaskDetail() {
                 </div>
                 <div className="detail-item">
                   <label>Completed At</label>
-                  <div className="value">{task.completed_at}</div>
+                  <div className="value">{formatDate(task.completed_at)}</div>
                 </div>
               </>
             )}
@@ -259,7 +307,7 @@ export default function TaskDetail() {
                 </div>
                 <div className="detail-item">
                   <label>Closed At</label>
-                  <div className="value">{task.closed_at}</div>
+                  <div className="value">{formatDate(task.closed_at)}</div>
                 </div>
               </>
             )}
@@ -314,7 +362,7 @@ export default function TaskDetail() {
                 <div className="activity-content">
                   <div className="action">{log.action}</div>
                   <div style={{ fontSize: '0.85rem', color: '#666' }}>{log.details}</div>
-                  <div className="meta">{log.user_name} &middot; {log.created_at}</div>
+                  <div className="meta">{log.user_name} &middot; {formatDate(log.created_at)}</div>
                 </div>
               </div>
             ))
@@ -366,7 +414,7 @@ export default function TaskDetail() {
               <div key={note.id} className="note-item">
                 <div className="note-header">
                   <strong>{note.user_name}</strong>
-                  <span style={{ color: '#999', fontSize: '0.8rem' }}>{note.created_at}</span>
+                  <span style={{ color: '#999', fontSize: '0.8rem' }}>{formatDate(note.created_at)}</span>
                 </div>
                 <div className="note-text">{note.note}</div>
               </div>
@@ -388,6 +436,70 @@ export default function TaskDetail() {
                 <div style={{ fontSize: '0.75rem', color: '#999', marginTop: '0.25rem' }}>{photo.user_name}</div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => !editLoading && setShowEditModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '600px' }}>
+            <h2>Edit Task — {task.id}</h2>
+            <form onSubmit={handleEditSubmit}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Client Name</label>
+                  <input name="client_name" value={editForm.client_name} onChange={handleEditChange} required />
+                </div>
+                <div className="form-group">
+                  <label>Contact Person</label>
+                  <input name="contact_person" value={editForm.contact_person} onChange={handleEditChange} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Mobile Number</label>
+                  <input name="mobile_number" value={editForm.mobile_number} onChange={handleEditChange} />
+                </div>
+                <div className="form-group">
+                  <label>Location</label>
+                  <input name="location" value={editForm.location} onChange={handleEditChange} required />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Job Type</label>
+                  <input name="job_type" value={editForm.job_type} onChange={handleEditChange} required />
+                </div>
+                <div className="form-group">
+                  <label>Priority</label>
+                  <select name="priority" value={editForm.priority} onChange={handleEditChange}>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea name="description" value={editForm.description} onChange={handleEditChange} rows={3} />
+              </div>
+              <div className="form-group">
+                <label>Special Instructions</label>
+                <textarea name="special_instructions" value={editForm.special_instructions} onChange={handleEditChange} rows={2} />
+              </div>
+              <div className="form-group">
+                <label>Attachment</label>
+                <input type="file" onChange={e => setEditAttachment(e.target.files[0])} />
+                {task.attachment && <div style={{ fontSize: '0.8rem', marginTop: '0.3rem', color: 'var(--text-muted)' }}>Current: {task.attachment.replace(/^\d+-\d+-/, '')}</div>}
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn btn-outline" onClick={() => setShowEditModal(false)} disabled={editLoading}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={editLoading}>
+                  {editLoading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

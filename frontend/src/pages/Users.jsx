@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usersAPI } from '../services/api';
+import { formatDate } from '../utils/formatDate';
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -73,7 +74,7 @@ export default function Users() {
                     <td>{u.name}</td>
                     <td><span className="badge badge-assigned">{u.role}</span></td>
                     <td>{u.mobile || '-'}</td>
-                    <td style={{ fontSize: '0.8rem', color: '#999' }}>{u.created_at}</td>
+                    <td style={{ fontSize: '0.8rem', color: '#999' }}>{formatDate(u.created_at)}</td>
                   </tr>
                 ))}
               </tbody>

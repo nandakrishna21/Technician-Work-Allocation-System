@@ -195,7 +195,7 @@ router.post('/:id/assign', authenticate, authorize('admin'), (req, res) => {
         const isLead = lead_technician_id && techId == lead_technician_id ? 1 : 0;
         insertStmt.run(req.params.id, techId, isLead);
       });
-      db.prepare('UPDATE tasks SET status = ?, assigned_by = ?, assigned_at = datetime(\'now\', \'localtime\') WHERE id = ?').run('ASSIGNED', req.user.id, req.params.id);
+      db.prepare('UPDATE tasks SET status = ?, assigned_by = ?, assigned_at = datetime(\'now\') WHERE id = ?').run('ASSIGNED', req.user.id, req.params.id);
     });
 
     transaction();
@@ -272,7 +272,7 @@ router.post('/:id/complete', authenticate, authorize('technician'), upload.array
     const assignment = db.prepare('SELECT * FROM task_assignments WHERE task_id = ? AND technician_id = ?').get(req.params.id, req.user.id);
     if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
 
-    db.prepare('UPDATE tasks SET status = ?, completed_by = ?, completed_at = datetime(\'now\', \'localtime\'), completion_notes = ? WHERE id = ?').run('COMPLETED', req.user.id, completion_notes || null, req.params.id);
+    db.prepare('UPDATE tasks SET status = ?, completed_by = ?, completed_at = datetime(\'now\'), completion_notes = ? WHERE id = ?').run('COMPLETED', req.user.id, completion_notes || null, req.params.id);
 
     if (req.files && req.files.length > 0) {
       const insertPhoto = db.prepare('INSERT INTO task_photos (task_id, user_id, file_path, type) VALUES (?, ?, ?, ?)');
@@ -296,7 +296,7 @@ router.post('/:id/approve', authenticate, authorize('admin'), (req, res) => {
     if (!task) return res.status(404).json({ error: 'Task not found.' });
     if (task.status !== 'COMPLETED') return res.status(400).json({ error: 'Task must be in COMPLETED status.' });
 
-    db.prepare('UPDATE tasks SET status = ?, closed_by = ?, closed_at = datetime(\'now\', \'localtime\') WHERE id = ?').run('CLOSED', req.user.id, req.params.id);
+    db.prepare('UPDATE tasks SET status = ?, closed_by = ?, closed_at = datetime(\'now\') WHERE id = ?').run('CLOSED', req.user.id, req.params.id);
     logActivity(req.params.id, req.user.id, 'TASK_CLOSED', `Task closed by ${req.user.name}`);
 
     res.json({ message: 'Task closed successfully.' });

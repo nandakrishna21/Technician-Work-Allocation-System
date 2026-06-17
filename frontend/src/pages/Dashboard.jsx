@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboardAPI, tasksAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { formatDate } from '../utils/formatDate';
+
+const STAT_CONFIG = {
+  CREATED: { label: 'Open Tasks', cls: 'stat-created', icon: '\u25CB' },
+  ASSIGNED: { label: 'Assigned Tasks', cls: 'stat-assigned', icon: '\u2192' },
+  ACCEPTED: { label: 'Accepted Tasks', cls: 'stat-accepted', icon: '\u2713' },
+  IN_PROGRESS: { label: 'In Progress', cls: 'stat-progress', icon: '\u2699' },
+  COMPLETED: { label: 'Completed', cls: 'stat-completed', icon: '\u2714' },
+  CLOSED: { label: 'Closed', cls: 'stat-closed', icon: '\u2716' }
+};
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -11,6 +22,7 @@ export default function Dashboard() {
   const [resetting, setResetting] = useState(false);
   const [resetError, setResetError] = useState('');
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const loadData = () => {
@@ -34,24 +46,12 @@ export default function Dashboard() {
     try {
       await tasksAPI.resetAll();
       loadData();
+      showToast('All tasks have been reset successfully.', 'success');
     } catch (err) {
       loadData();
+      showToast(err.response?.data?.error || 'Failed to reset tasks.', 'error');
     }
   };
-
-  if (loading) return <div className="empty-state">Loading dashboard...</div>;
-  if (!data) return <div className="empty-state">Failed to load dashboard.</div>;
-
-  const { counts, totalTasks, recentTasks } = data;
-
-  const statCards = [
-    { key: 'CREATED', label: 'Open Tasks', className: 'stat-created' },
-    { key: 'ASSIGNED', label: 'Assigned Tasks', className: 'stat-assigned' },
-    { key: 'ACCEPTED', label: 'Accepted Tasks', className: 'stat-accepted' },
-    { key: 'IN_PROGRESS', label: 'In Progress', className: 'stat-progress' },
-    { key: 'COMPLETED', label: 'Completed', className: 'stat-completed' },
-    { key: 'CLOSED', label: 'Closed', className: 'stat-closed' }
-  ];
 
   const statusBadge = (status) => {
     const map = {
@@ -61,35 +61,94 @@ export default function Dashboard() {
     return `badge ${map[status] || 'badge-created'}`;
   };
 
+  if (loading) {
+    return (
+      <div>
+        <div className="dash-welcome dash-welcome-skeleton">
+          <div className="skeleton skeleton-text skeleton-w-200"></div>
+          <div className="skeleton skeleton-text skeleton-w-150"></div>
+        </div>
+        <div className="stats-grid">
+          {[1,2,3,4,5,6].map(i => <div key={i} className="skeleton skeleton-card"></div>)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) return <div className="empty-state">Failed to load dashboard.</div>;
+
+  const { counts, totalTasks, recentTasks } = data;
+
+  const getGreeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const totalActive = (counts.CREATED || 0) + (counts.ASSIGNED || 0) + (counts.ACCEPTED || 0) + (counts.IN_PROGRESS || 0);
+  const totalDone = (counts.COMPLETED || 0) + (counts.CLOSED || 0);
+
   return (
     <div>
-      <div className="page-header">
-        <h1>Dashboard</h1>
-        <div className="page-header-actions">
-          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Welcome, {user?.name}</span>
+      {/* Welcome Banner */}
+      <div className="dash-welcome">
+        <div className="dash-welcome-text">
+          <h2>{getGreeting()}, {user?.name?.split(' ')[0] || 'User'}</h2>
+          <p>{totalTasks > 0 ? `You have ${totalActive} active task${totalActive !== 1 ? 's' : ''} and ${totalDone} completed.` : 'No tasks yet. Create your first task to get started.'}</p>
+        </div>
+        <div className="dash-welcome-actions">
           {user?.role === 'admin' && (
-            <button className="btn btn-sm btn-danger" onClick={() => setShowResetConfirm(true)}>&#8634; Reset All</button>
+            <>
+              <button className="btn btn-primary" onClick={() => navigate('/tasks/create')}>+ New Task</button>
+              <button className="btn btn-outline" onClick={() => setShowResetConfirm(true)}>&#8634; Reset</button>
+            </>
           )}
         </div>
       </div>
 
+      {/* Summary Row */}
+      <div className="dash-summary">
+        <div className="dash-summary-item">
+          <span className="dash-summary-value">{totalTasks}</span>
+          <span className="dash-summary-label">Total Tasks</span>
+        </div>
+        <div className="dash-summary-divider"></div>
+        <div className="dash-summary-item">
+          <span className="dash-summary-value" style={{ color: 'var(--primary)' }}>{totalActive}</span>
+          <span className="dash-summary-label">Active</span>
+        </div>
+        <div className="dash-summary-divider"></div>
+        <div className="dash-summary-item">
+          <span className="dash-summary-value" style={{ color: '#10b981' }}>{totalDone}</span>
+          <span className="dash-summary-label">Completed</span>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
       <div className="stats-grid">
-        {statCards.map(s => (
-          <div key={s.key} className={`stat-card ${s.className}`} onClick={() => navigate(`/tasks?status=${s.key}`)}>
-            <div className="stat-value">{counts[s.key] || 0}</div>
-            <div className="stat-label">{s.label}</div>
+        {Object.entries(STAT_CONFIG).map(([key, cfg]) => (
+          <div key={key} className={`stat-card ${cfg.cls}`} onClick={() => navigate(`/tasks?status=${key}`)}>
+            <div className="stat-card-inner">
+              <div className="stat-card-content">
+                <div className="stat-value">{counts[key] || 0}</div>
+                <div className="stat-label">{cfg.label}</div>
+              </div>
+              <div className="stat-card-icon">{cfg.icon}</div>
+            </div>
           </div>
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+      {/* Recent Tasks + Activity */}
+      <div className="dash-bottom-grid">
         <div className="card">
           <div className="card-header">
             <h3>Recent Tasks</h3>
             <button className="btn btn-sm btn-outline" onClick={() => navigate('/tasks')}>View All</button>
           </div>
           {recentTasks.length === 0 ? (
-            <div className="empty-state">No tasks yet.</div>
+            <div className="empty-state">No tasks created yet.</div>
           ) : (
             <div className="table-wrapper">
               <table>
@@ -105,13 +164,13 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {recentTasks.map(task => (
-                    <tr key={task.id} onClick={() => navigate(`/tasks/${task.id}`)} style={{ cursor: 'pointer' }}>
+                    <tr key={task.id} onClick={() => navigate(`/tasks/${task.id}`)}>
                       <td><strong>{task.id}</strong></td>
                       <td>{task.client_name}</td>
                       <td>{task.job_type}</td>
                       <td><span className={`priority-${task.priority.toLowerCase()}`}>{task.priority}</span></td>
                       <td><span className={statusBadge(task.status)}>{task.status}</span></td>
-                      <td style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{task.created_at}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{formatDate(task.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -125,28 +184,31 @@ export default function Dashboard() {
             <h3>Recent Activity</h3>
           </div>
           {activity.length === 0 ? (
-            <div className="empty-state">No activity yet.</div>
+            <div className="empty-state">No activity recorded.</div>
           ) : (
-            activity.slice(0, 10).map(log => (
-              <div key={log.id} className="activity-item">
-                <div className="activity-icon">&#9654;</div>
-                <div className="activity-content">
-                  <div className="action">{log.action}</div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{log.details}</div>
-                  <div className="meta">{log.user_name} &middot; {log.created_at}</div>
+            <div className="activity-list">
+              {activity.slice(0, 8).map(log => (
+                <div key={log.id} className="activity-item">
+                  <div className="activity-icon">&#9654;</div>
+                  <div className="activity-content">
+                    <div className="action">{log.action}</div>
+                    <div className="activity-detail">{log.details}</div>
+                    <div className="meta">{log.user_name} &middot; {formatDate(log.created_at)}</div>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>
 
+      {/* Reset Modal */}
       {showResetConfirm && (
         <div className="modal-overlay" onClick={() => !resetting && setShowResetConfirm(false)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ width: '400px' }}>
             <h2>Reset All Tasks?</h2>
             {resetError && <div className="error-message">{resetError}</div>}
-            <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
+            <p style={{ marginBottom: '1.5rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
               This will permanently delete all tasks, assignments, notes, photos, and activity logs. Users will be preserved. This action cannot be undone.
             </p>
             <div className="form-actions">

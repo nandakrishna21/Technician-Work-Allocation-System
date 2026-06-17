@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tasksAPI } from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 export default function CreateTask() {
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     client_name: '',
@@ -37,6 +39,7 @@ export default function CreateTask() {
       }
 
       const res = await tasksAPI.create(formData);
+      showToast('Task created successfully!', 'success');
       navigate(`/tasks/${res.data.id}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create task.');

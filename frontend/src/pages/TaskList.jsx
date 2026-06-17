@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import { tasksAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { formatDate } from '../utils/formatDate';
 
 export default function TaskList() {
   const [searchParams] = useSearchParams();
@@ -11,6 +13,7 @@ export default function TaskList() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ status: initialStatus, priority: '', search: '' });
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const fetchTasks = () => {
@@ -31,27 +34,31 @@ export default function TaskList() {
   const handleFilter = () => fetchTasks();
 
   const exportToExcel = () => {
-    const data = tasks.map(t => ({
-      'Task ID': t.id,
-      'Client Name': t.client_name,
-      'Contact Person': t.contact_person || '',
-      'Mobile': t.mobile_number || '',
-      'Location': t.location,
-      'Job Type': t.job_type,
-      'Priority': t.priority,
-      'Status': t.status,
-      'Technicians': t.technicians?.map(tech => tech.name).join(', ') || '',
-      'Description': t.description || '',
-      'Special Instructions': t.special_instructions || '',
-      'Created By': t.created_by_name || '',
-      'Created At': t.created_at,
-      'Completed At': t.completed_at || ''
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
-    XLSX.writeFile(wb, `tasks-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    try {
+      const data = tasks.map(t => ({
+        'Task ID': t.id,
+        'Client Name': t.client_name,
+        'Contact Person': t.contact_person || '',
+        'Mobile': t.mobile_number || '',
+        'Location': t.location,
+        'Job Type': t.job_type,
+        'Priority': t.priority,
+        'Status': t.status,
+        'Technicians': t.technicians?.map(tech => tech.name).join(', ') || '',
+        'Description': t.description || '',
+        'Special Instructions': t.special_instructions || '',
+        'Created By': t.created_by_name || '',
+        'Created At': formatDate(t.created_at),
+        'Completed At': t.completed_at ? formatDate(t.completed_at) : ''
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Tasks');
+      XLSX.writeFile(wb, `tasks-export-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      showToast(`${data.length} task${data.length !== 1 ? 's' : ''} exported to Excel.`, 'success');
+    } catch {
+      showToast('Failed to export tasks.', 'error');
+    }
   };
 
   const statusBadge = (status) => {
@@ -130,7 +137,7 @@ export default function TaskList() {
                     <td><span className={`priority-${task.priority.toLowerCase()}`}>{task.priority}</span></td>
                     <td><span className={statusBadge(task.status)}>{task.status}</span></td>
                     <td>{task.technicians?.map(t => t.name).join(', ') || '-'}</td>
-                    <td style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{task.created_at}</td>
+                      <td style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{formatDate(task.created_at)}</td>
                   </tr>
                 ))}
               </tbody>

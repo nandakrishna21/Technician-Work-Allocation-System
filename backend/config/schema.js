@@ -10,7 +10,7 @@ function initializeDatabase() {
       name TEXT NOT NULL,
       role TEXT NOT NULL CHECK(role IN ('admin', 'technician')),
       mobile TEXT,
-      created_at DATETIME DEFAULT (datetime('now', 'localtime'))
+      created_at DATETIME DEFAULT (datetime('now', 'utc'))
     );
 
     CREATE TABLE IF NOT EXISTS tasks (
@@ -26,7 +26,7 @@ function initializeDatabase() {
       attachment TEXT,
       status TEXT NOT NULL DEFAULT 'CREATED' CHECK(status IN ('CREATED','ASSIGNED','ACCEPTED','IN_PROGRESS','COMPLETED','CLOSED')),
       created_by INTEGER REFERENCES users(id),
-      created_at DATETIME DEFAULT (datetime('now', 'localtime')),
+      created_at DATETIME DEFAULT (datetime('now', 'utc')),
       assigned_by INTEGER REFERENCES users(id),
       assigned_at DATETIME,
       completed_by INTEGER REFERENCES users(id),
@@ -41,7 +41,7 @@ function initializeDatabase() {
       task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
       technician_id INTEGER NOT NULL REFERENCES users(id),
       is_lead INTEGER DEFAULT 0,
-      assigned_at DATETIME DEFAULT (datetime('now', 'localtime'))
+      assigned_at DATETIME DEFAULT (datetime('now', 'utc'))
     );
 
     CREATE TABLE IF NOT EXISTS activity_logs (
@@ -50,7 +50,7 @@ function initializeDatabase() {
       user_id INTEGER NOT NULL REFERENCES users(id),
       action TEXT NOT NULL,
       details TEXT,
-      created_at DATETIME DEFAULT (datetime('now', 'localtime'))
+      created_at DATETIME DEFAULT (datetime('now', 'utc'))
     );
 
     CREATE TABLE IF NOT EXISTS task_notes (
@@ -59,7 +59,7 @@ function initializeDatabase() {
       user_id INTEGER NOT NULL REFERENCES users(id),
       note TEXT NOT NULL,
       is_progress INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT (datetime('now', 'localtime'))
+      created_at DATETIME DEFAULT (datetime('now', 'utc'))
     );
 
     CREATE TABLE IF NOT EXISTS task_photos (
@@ -68,7 +68,7 @@ function initializeDatabase() {
       user_id INTEGER NOT NULL REFERENCES users(id),
       file_path TEXT NOT NULL,
       type TEXT DEFAULT 'completion',
-      created_at DATETIME DEFAULT (datetime('now', 'localtime'))
+      created_at DATETIME DEFAULT (datetime('now', 'utc'))
     );
   `);
 

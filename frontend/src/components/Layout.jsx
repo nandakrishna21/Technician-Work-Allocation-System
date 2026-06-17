@@ -21,8 +21,11 @@ export default function Layout() {
     <div className="app-layout">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <h2>TechWorkFlow</h2>
-          <small>Work Allocation System</small>
+          <div className="sidebar-logo">TW</div>
+          <div className="sidebar-brand-text">
+            <h2>TechWorkFlow</h2>
+            <small>Work Allocation System</small>
+          </div>
         </div>
         <nav className="sidebar-nav">
           <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>
@@ -50,10 +53,15 @@ export default function Layout() {
           <button className="theme-toggle" onClick={toggleTheme}>
             {theme === 'light' ? '\u263E' : '\u2600'} <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
           </button>
-          <div className="user-name">{user?.name}</div>
-          <div className="user-role">{user?.role}</div>
-          <button onClick={logout} className="btn btn-sm" style={{ marginTop: '0.6rem', width: '100%', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            Logout
+          <div className="sidebar-user">
+            <div className="sidebar-avatar">{user?.name?.[0]?.toUpperCase() || 'U'}</div>
+            <div className="sidebar-user-info">
+              <div className="user-name">{user?.name}</div>
+              <div className="user-role">{user?.role}</div>
+            </div>
+          </div>
+          <button onClick={logout} className="btn btn-sm sidebar-logout-btn">
+            <span className="logout-icon">&#10149;</span> Sign Out
           </button>
         </div>
       </aside>
