@@ -370,15 +370,11 @@ router.post('/:id/respond', authenticate, authorize('admin'), (req, res) => {
 
 router.post('/reset-all', authenticate, authorize('admin'), (req, res) => {
   try {
-    db.exec(`
-      DELETE FROM task_photos;
-      DELETE FROM task_notes;
-      DELETE FROM activity_logs;
-      DELETE FROM task_assignments;
-      DELETE FROM tasks;
-    `);
-
-    db.prepare('INSERT INTO activity_logs (task_id, user_id, action, details) VALUES (?, ?, ?, ?)').run('SYSTEM', req.user.id, 'SYSTEM_RESET', `All tasks reset by ${req.user.name}`);
+    db.exec(`DELETE FROM task_photos`);
+    db.exec(`DELETE FROM task_notes`);
+    db.exec(`DELETE FROM activity_logs`);
+    db.exec(`DELETE FROM task_assignments`);
+    db.exec(`DELETE FROM tasks`);
 
     res.json({ message: 'All tasks have been reset successfully.' });
   } catch (err) {
