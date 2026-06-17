@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: technician-work-allocation
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: cd frontend && npm install && npm run build && cd ../backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  - name: technician-work-allocation-db
+    plan: free
+    region: oregon
+    postgresMajorVersion: "15"
+    ipAllowList: []
