@@ -2,6 +2,17 @@ const db = require('./db');
 const bcrypt = require('bcryptjs');
 
 async function initializeDatabase() {
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    try {
+      await db.execute('SELECT 1');
+      break;
+    } catch (e) {
+      if (attempt === 15) throw e;
+      console.log(`Waiting for database... attempt ${attempt}/15`);
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
+
   await db.execute(`CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
