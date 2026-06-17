@@ -7,11 +7,17 @@ export default function Layout() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
   });
+  const [time, setTime] = useState(new Date());
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -66,6 +72,12 @@ export default function Layout() {
         </div>
       </aside>
       <main className="main-content">
+        <div className="main-header">
+          <div />
+          <div className="live-clock">
+            {time.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+          </div>
+        </div>
         <Outlet />
       </main>
     </div>
