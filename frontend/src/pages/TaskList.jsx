@@ -66,7 +66,7 @@ export default function TaskList() {
     <div>
       <div className="page-header">
         <h1>Tasks{filters.status ? ` - ${filters.status.replace(/_/g, ' ')}` : ''}</h1>
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div className="page-header-actions">
           <button className="btn btn-sm btn-outline" onClick={exportToExcel} disabled={tasks.length === 0}>
             &#8681; Export Excel
           </button>
@@ -108,7 +108,7 @@ export default function TaskList() {
         ) : tasks.length === 0 ? (
           <div className="empty-state">No tasks found.</div>
         ) : (
-          <div className="table-container">
+          <div className="table-wrapper">
             <table>
               <thead>
                 <tr>

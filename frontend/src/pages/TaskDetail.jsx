@@ -161,8 +161,7 @@ export default function TaskDetail() {
       {message.text && <div className={`${message.type}-message`}>{message.text}</div>}
 
       {/* Action Buttons */}
-      <div className="card" style={{ padding: '1rem', marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+      <div className="action-bar">
           {user?.role === 'admin' && task.status === 'CREATED' && (
             <button className="btn btn-primary" onClick={openAssignModal}>Assign Technicians</button>
           )}
@@ -182,7 +181,6 @@ export default function TaskDetail() {
             <button className="btn btn-primary" onClick={handleStart}>Start Work</button>
           )}
         </div>
-      </div>
 
       {/* Tabs */}
       <div className="tabs">
@@ -342,8 +340,8 @@ export default function TaskDetail() {
           )}
 
           {task.status === 'IN_PROGRESS' && user?.role === 'technician' && (
-            <form onSubmit={handleComplete} style={{ marginBottom: '1.5rem', padding: '1rem', background: '#f8f9ff', borderRadius: '8px' }}>
-              <h4 style={{ marginBottom: '1rem' }}>Mark Task as Completed</h4>
+            <form onSubmit={handleComplete} className="completion-form">
+              <h4>Mark Task as Completed</h4>
               <div className="form-group">
                 <label>Completion Notes</label>
                 <textarea

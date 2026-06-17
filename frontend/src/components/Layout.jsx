@@ -20,32 +20,41 @@ export default function Layout() {
   return (
     <div className="app-layout">
       <aside className="sidebar">
-        <h2>TechWorkFlow</h2>
-        <nav>
+        <div className="sidebar-brand">
+          <h2>TechWorkFlow</h2>
+          <small>Work Allocation System</small>
+        </div>
+        <nav className="sidebar-nav">
           <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>
-            <span>&#9632;</span> <span>Dashboard</span>
+            <span className="nav-icon">&#9632;</span>
+            <span>Dashboard</span>
           </NavLink>
           <NavLink to="/tasks" className={({ isActive }) => isActive ? 'active' : ''}>
-            <span>&#9776;</span> <span>Tasks</span>
+            <span className="nav-icon">&#9776;</span>
+            <span>Tasks</span>
           </NavLink>
           {user?.role === 'admin' && (
             <NavLink to="/tasks/create" className={({ isActive }) => isActive ? 'active' : ''}>
-              <span>+</span> <span>Create Task</span>
+              <span className="nav-icon">+</span>
+              <span>Create Task</span>
             </NavLink>
           )}
           {user?.role === 'admin' && (
             <NavLink to="/users" className={({ isActive }) => isActive ? 'active' : ''}>
-              <span>&#9783;</span> <span>Users</span>
+              <span className="nav-icon">&#9783;</span>
+              <span>Users</span>
             </NavLink>
           )}
         </nav>
-        <button className="theme-toggle" onClick={toggleTheme}>
-          {theme === 'light' ? '\u263E Dark Mode' : '\u2600 Light Mode'}
-        </button>
-        <div className="user-info">
-          <div><strong>{user?.name}</strong></div>
-          <div className="role">{user?.role}</div>
-          <button onClick={logout} className="btn btn-sm btn-outline" style={{ marginTop: '0.5rem', color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }}>Logout</button>
+        <div className="sidebar-footer">
+          <button className="theme-toggle" onClick={toggleTheme}>
+            {theme === 'light' ? '\u263E' : '\u2600'} <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+          </button>
+          <div className="user-name">{user?.name}</div>
+          <div className="user-role">{user?.role}</div>
+          <button onClick={logout} className="btn btn-sm" style={{ marginTop: '0.6rem', width: '100%', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            Logout
+          </button>
         </div>
       </aside>
       <main className="main-content">

@@ -65,8 +65,8 @@ export default function Dashboard() {
     <div>
       <div className="page-header">
         <h1>Dashboard</h1>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <span style={{ color: 'var(--text-muted)' }}>Welcome, {user?.name}</span>
+        <div className="page-header-actions">
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Welcome, {user?.name}</span>
           {user?.role === 'admin' && (
             <button className="btn btn-sm btn-danger" onClick={() => setShowResetConfirm(true)}>&#8634; Reset All</button>
           )}
@@ -91,7 +91,7 @@ export default function Dashboard() {
           {recentTasks.length === 0 ? (
             <div className="empty-state">No tasks yet.</div>
           ) : (
-            <div className="table-container">
+            <div className="table-wrapper">
               <table>
                 <thead>
                   <tr>
