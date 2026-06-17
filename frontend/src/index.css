@@ -273,6 +273,12 @@ a { text-decoration: none; color: inherit; }
 .dash-welcome .btn-outline { border-color: var(--primary); color: var(--primary); }
 .dash-welcome .btn-outline:hover { background: var(--primary-light); border-color: var(--primary-dark); }
 .dash-welcome-actions { display: flex; gap: 0.75rem; flex-shrink: 0; }
+[data-theme="dark"] .dash-welcome {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  color: #e2e8f0;
+}
+[data-theme="dark"] .dash-welcome .btn-outline { border-color: rgba(255,255,255,0.3); color: #e2e8f0; }
+[data-theme="dark"] .dash-welcome .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
 
 /* Dashboard Summary */
 .dash-summary {
