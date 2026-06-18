@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/technicians', authenticate, authorize('admin'), async (req, res) => {
   try {
-    const techs = await db.query('SELECT id, username, name, role, mobile, created_at FROM users WHERE role = $1', ['technician']);
+    const techs = await db.query('SELECT id, username, name, role, mobile, employee_id, created_at FROM users WHERE role = $1', ['technician']);
     res.json(techs);
   } catch (err) {
     console.error('Fetch technicians error:', err);
@@ -31,6 +31,9 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     const result = await db.queryOne('INSERT INTO users (username, password, name, role, mobile) VALUES ($1, $2, $3, $4, $5) RETURNING id',
       [username, hashedPassword, name, role, mobile || null]);
 
+    const newId = result.id;
+    try { await db.execute('UPDATE users SET employee_id = $1 WHERE id = $2', [String(newId), newId]); } catch (e) {}
+
     res.status(201).json({ id: result.id, username, name, role });
   } catch (err) {
     console.error('Create user error:', err);
@@ -41,11 +44,11 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
 router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, mobile } = req.body;
+    const { name, mobile, employee_id } = req.body;
     if (!name) return res.status(400).json({ error: 'Name is required.' });
 
-    await db.execute('UPDATE users SET name = $1, mobile = $2 WHERE id = $3 AND role = $4',
-      [name, mobile || null, id, 'technician']);
+    await db.execute('UPDATE users SET name = $1, mobile = $2, employee_id = $3 WHERE id = $4 AND role = $5',
+      [name, mobile || null, employee_id || null, id, 'technician']);
     res.json({ success: true });
   } catch (err) {
     console.error('Update user error:', err);

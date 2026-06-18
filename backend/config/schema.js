@@ -20,8 +20,11 @@ async function initializeDatabase() {
     name TEXT NOT NULL,
     role TEXT NOT NULL CHECK(role IN ('admin', 'technician')),
     mobile TEXT,
+    employee_id TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  try { await db.execute("ALTER TABLE users ADD COLUMN employee_id TEXT"); } catch (e) {}
 
   await db.execute(`CREATE TABLE IF NOT EXISTS tasks (
     id TEXT PRIMARY KEY,
@@ -102,12 +105,12 @@ async function initializeDatabase() {
   const techExists = await db.queryOne('SELECT id FROM users WHERE username = $1', ['tech1']);
   if (!techExists) {
     const hashedPassword = bcrypt.hashSync('tech123', 10);
-    await db.execute('INSERT INTO users (username, password, name, role, mobile) VALUES ($1, $2, $3, $4, $5)',
-      ['tech1', hashedPassword, 'John Technician', 'technician', '1111111111']);
-    await db.execute('INSERT INTO users (username, password, name, role, mobile) VALUES ($1, $2, $3, $4, $5)',
-      ['tech2', hashedPassword, 'Jane Technician', 'technician', '2222222222']);
-    await db.execute('INSERT INTO users (username, password, name, role, mobile) VALUES ($1, $2, $3, $4, $5)',
-      ['tech3', hashedPassword, 'Bob Technician', 'technician', '3333333333']);
+    await db.execute('INSERT INTO users (username, password, name, role, mobile, employee_id) VALUES ($1, $2, $3, $4, $5, $6)',
+      ['tech1', hashedPassword, 'John Technician', 'technician', '1111111111', '1']);
+    await db.execute('INSERT INTO users (username, password, name, role, mobile, employee_id) VALUES ($1, $2, $3, $4, $5, $6)',
+      ['tech2', hashedPassword, 'Jane Technician', 'technician', '2222222222', '2']);
+    await db.execute('INSERT INTO users (username, password, name, role, mobile, employee_id) VALUES ($1, $2, $3, $4, $5, $6)',
+      ['tech3', hashedPassword, 'Bob Technician', 'technician', '3333333333', '3']);
   }
 }
 
