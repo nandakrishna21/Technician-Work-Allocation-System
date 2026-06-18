@@ -102,6 +102,10 @@ async function initializeDatabase() {
       ['admin', hashedPassword, 'System Admin', 'admin', '0000000000']);
   }
 
+  await db.execute("UPDATE users SET employee_id = 'RITPL-001' WHERE username = 'tech1'");
+  await db.execute("UPDATE users SET employee_id = 'RITPL-002' WHERE username = 'tech2'");
+  await db.execute("UPDATE users SET employee_id = 'RITPL-003' WHERE username = 'tech3'");
+
   const techExists = await db.queryOne('SELECT id FROM users WHERE username = $1', ['tech1']);
   if (!techExists) {
     const hashedPassword = bcrypt.hashSync('tech123', 10);
