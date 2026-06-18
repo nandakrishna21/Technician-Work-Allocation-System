@@ -612,14 +612,14 @@ export default function TaskDetail() {
             <div className="form-group">
               <label>Select Technicians</label>
               <div className="checkbox-list">
-                {technicians.map(tech => (
+                {technicians.map((tech, i) => (
                   <label key={tech.id}>
                     <input
                       type="checkbox"
                       checked={selectedTechs.includes(tech.id)}
                       onChange={() => toggleTech(tech.id)}
                     />
-                    {tech.name} ({tech.username})
+                    <span className="tech-number">{i + 1}.</span> {tech.name} ({tech.username})
                   </label>
                 ))}
               </div>
