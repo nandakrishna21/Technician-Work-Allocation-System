@@ -779,6 +779,10 @@ tbody tr:active { background: color-mix(in srgb, var(--primary-light) 80%, trans
 .tech-tag { display: inline-flex; background: var(--primary-light); color: var(--primary); padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
 .tech-tag.tech-lead { background: var(--primary); color: #fff; }
 .tech-number { display: inline-block; min-width: 1.2rem; font-weight: 600; color: var(--text-muted); }
+.assigned-tech-bar { display: flex; align-items: center; gap: 0.4rem; padding: 0.6rem 0; margin-bottom: 0.5rem; flex-wrap: wrap; }
+.assigned-tech-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.assigned-tech-chip { display: inline-flex; background: var(--primary-light); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
+.assigned-tech-chip.lead { background: var(--primary); color: #fff; }
 
 /* Filter Bar */
 .filter-bar {

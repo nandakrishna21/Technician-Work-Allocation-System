@@ -47,6 +47,12 @@ export default function Layout() {
               <span>Users</span>
             </NavLink>
           )}
+          {user?.role === 'admin' && (
+            <NavLink to="/manage" className={({ isActive }) => isActive ? 'active' : ''}>
+              <span className="nav-icon">&#9881;</span>
+              <span>Manage</span>
+            </NavLink>
+          )}
         </nav>
         <div className="sidebar-footer">
           <button className="theme-toggle" onClick={toggleTheme}>

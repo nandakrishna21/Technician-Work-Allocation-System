@@ -8,6 +8,7 @@ import TaskList from './pages/TaskList';
 import TaskDetail from './pages/TaskDetail';
 import CreateTask from './pages/CreateTask';
 import Users from './pages/Users';
+import Manage from './pages/Manage';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, loading } = useAuth();
@@ -29,6 +30,7 @@ function AppRoutes() {
         <Route path="tasks/create" element={<ProtectedRoute allowedRoles={['admin']}><CreateTask /></ProtectedRoute>} />
         <Route path="tasks/:id" element={<TaskDetail />} />
         <Route path="users" element={<ProtectedRoute allowedRoles={['admin']}><Users /></ProtectedRoute>} />
+        <Route path="manage" element={<ProtectedRoute allowedRoles={['admin']}><Manage /></ProtectedRoute>} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>

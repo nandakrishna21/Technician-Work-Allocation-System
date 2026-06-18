@@ -83,6 +83,15 @@ async function initializeDatabase() {
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
 
+  await db.execute(`CREATE TABLE IF NOT EXISTS clarifications (
+    id SERIAL PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    message TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'request' CHECK(type IN ('request', 'response')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )`);
+
   const adminExists = await db.queryOne('SELECT id FROM users WHERE username = $1', ['admin']);
   if (!adminExists) {
     const hashedPassword = bcrypt.hashSync('admin123', 10);

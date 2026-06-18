@@ -269,6 +269,18 @@ export default function TaskDetail() {
           )}
         </div>
 
+      {/* Assigned Technicians (after Edit button) */}
+      {task.technicians?.length > 0 && (
+        <div className="assigned-tech-bar">
+          <span className="assigned-tech-label">Assigned:</span>
+          {task.technicians.map(t => (
+            <span key={t.id} className={`assigned-tech-chip ${t.is_lead ? 'lead' : ''}`}>
+              {t.name}{t.is_lead ? ' (Lead)' : ''}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="tabs">
         <button className={`tab ${activeTab === 'details' ? 'active' : ''}`} onClick={() => setActiveTab('details')}>Details</button>
@@ -314,20 +326,7 @@ export default function TaskDetail() {
               <label>Created At</label>
                <div className="value">{formatDate(task.created_at)}</div>
             </div>
-            <div className="detail-item techs-row">
-              <label>Assigned Technicians</label>
-              <div className="value">
-                {task.technicians?.length > 0 ? (
-                  <div className="tech-tags">
-                    {task.technicians.map(t => (
-                      <span key={t.id} className={`tech-tag ${t.is_lead ? 'tech-lead' : ''}`}>
-                        {t.name}{t.is_lead ? ' (Lead)' : ''}
-                      </span>
-                    ))}
-                  </div>
-                ) : 'Not assigned yet.'}
-              </div>
-            </div>
+
             {task.assigned_by_name && (
               <>
                 <div className="detail-item">
@@ -388,23 +387,22 @@ export default function TaskDetail() {
                 <div className="value">{task.completion_notes}</div>
               </div>
             )}
-            {task.clarification_request && (
+            {task.clarifications?.length > 0 && (
               <div className="detail-item full">
-                <label>Clarification Request</label>
-                <div className="value clarify-box request">
-                  {task.clarification_request}
+                <label>Clarifications</label>
+                <div className="value" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {task.clarifications.map(c => (
+                    <div key={c.id} className={`clarify-box ${c.type}`}>
+                      <div style={{ fontWeight: 600, fontSize: '0.75rem', marginBottom: '0.2rem' }}>
+                        {c.type === 'request' ? 'Request' : 'Response'} by {c.user_name} &middot; {formatDate(c.created_at)}
+                      </div>
+                      <div>{c.message}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
-            {task.clarification_response && (
-              <div className="detail-item full">
-                <label>Clarification Response</label>
-                <div className="value clarify-box response">
-                  {task.clarification_response}
-                </div>
-              </div>
-            )}
-            {user?.role === 'admin' && task.clarification_request && !task.clarification_response && (
+            {user?.role === 'admin' && (
               <div className="detail-item full">
                 <label>Respond to Clarification</label>
                 <div style={{ marginTop: '0.25rem' }}>

@@ -102,10 +102,7 @@ export default function Dashboard() {
         </div>
         <div className="dash-welcome-actions">
           {user?.role === 'admin' && (
-            <>
-              <Link to="/tasks/create" className="btn btn-primary" style={{ textDecoration: 'none' }}>+ New Task</Link>
-              <button type="button" className="btn btn-outline" onClick={openReset}>&#8634; Reset</button>
-            </>
+            <Link to="/tasks/create" className="btn btn-primary" style={{ textDecoration: 'none' }}>+ New Task</Link>
           )}
         </div>
       </div>

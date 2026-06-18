@@ -89,6 +89,9 @@ export default function TaskList() {
       <div className="page-header">
         <h1>Tasks{filters.status ? ` - ${filters.status.replace(/_/g, ' ')}` : ''}</h1>
         <div className="page-header-actions">
+          <button className="btn btn-sm btn-outline" onClick={fetchTasks} title="Refresh">
+            &#8635; Reload
+          </button>
           <button className="btn btn-sm btn-outline" onClick={exportToExcel} disabled={tasks.length === 0}>
             &#8681; Export Excel
           </button>

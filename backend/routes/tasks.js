@@ -142,7 +142,9 @@ router.get('/:id', authenticate, async (req, res) => {
 
     const photos = await db.query(`SELECT tp.*, u.name as user_name FROM task_photos tp LEFT JOIN users u ON tp.user_id = u.id WHERE tp.task_id = $1 ORDER BY tp.created_at DESC`, [task.id]);
 
-    res.json({ ...task, technicians, activity_logs: logs, notes, photos });
+    const clarifications = await db.query(`SELECT c.*, u.name as user_name FROM clarifications c LEFT JOIN users u ON c.user_id = u.id WHERE c.task_id = $1 ORDER BY c.created_at ASC`, [task.id]);
+
+    res.json({ ...task, technicians, activity_logs: logs, notes, photos, clarifications });
   } catch (err) {
     console.error('Fetch task error:', err);
     res.status(500).json({ error: 'Failed to fetch task.' });
@@ -354,7 +356,8 @@ router.post('/:id/clarify', authenticate, authorize('technician'), async (req, r
       [req.params.id, req.user.id]);
     if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
 
-    await db.execute('UPDATE tasks SET clarification_request = $1 WHERE id = $2', [message, req.params.id]);
+    await db.execute('INSERT INTO clarifications (task_id, user_id, message, type) VALUES ($1, $2, $3, $4)',
+      [req.params.id, req.user.id, message, 'request']);
     await logActivity(req.params.id, req.user.id, 'CLARIFICATION_REQUESTED', `Clarification requested by ${req.user.name}: ${message}`);
 
     res.json({ message: 'Clarification request submitted.' });
@@ -371,9 +374,9 @@ router.post('/:id/respond', authenticate, authorize('admin'), async (req, res) =
 
     const task = await db.queryOne('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
     if (!task) return res.status(404).json({ error: 'Task not found.' });
-    if (!task.clarification_request) return res.status(400).json({ error: 'No pending clarification request.' });
 
-    await db.execute('UPDATE tasks SET clarification_response = $1 WHERE id = $2', [message, req.params.id]);
+    await db.execute('INSERT INTO clarifications (task_id, user_id, message, type) VALUES ($1, $2, $3, $4)',
+      [req.params.id, req.user.id, message, 'response']);
     await logActivity(req.params.id, req.user.id, 'CLARIFICATION_RESPONDED', `Clarification responded by ${req.user.name}: ${message}`);
 
     res.json({ message: 'Response submitted.' });
@@ -385,6 +388,7 @@ router.post('/:id/respond', authenticate, authorize('admin'), async (req, res) =
 
 router.post('/reset-all', authenticate, authorize('admin'), async (req, res) => {
   try {
+    await db.execute('DELETE FROM clarifications');
     await db.execute('DELETE FROM task_photos');
     await db.execute('DELETE FROM task_notes');
     await db.execute('DELETE FROM activity_logs');
