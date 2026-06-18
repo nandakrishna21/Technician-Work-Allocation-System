@@ -92,7 +92,7 @@ export default function Users() {
                   </tr>
               </thead>
               <tbody>
-                {[...users].sort((a, b) => (a.employee_id || a.id) - (b.employee_id || b.id)).map(u => (
+                {[...users].sort((a, b) => a.username.localeCompare(b.username)).map(u => (
                   <tr key={u.id}>
                     <td>{u.employee_id || u.id}</td>
                     <td><strong>{u.username}</strong></td>
