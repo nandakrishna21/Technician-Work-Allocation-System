@@ -92,7 +92,13 @@ export default function Users() {
                   </tr>
               </thead>
               <tbody>
-                {[...users].sort((a, b) => (a.employee_id || a.id).toString().localeCompare((b.employee_id || b.id).toString())).map(u => (
+                {[...users].sort((a, b) => {
+                  const idA = (a.employee_id || a.id).toString();
+                  const idB = (b.employee_id || b.id).toString();
+                  const idCmp = idA.localeCompare(idB);
+                  if (idCmp !== 0) return idCmp;
+                  return a.username.localeCompare(b.username);
+                }).map(u => (
                   <tr key={u.id}>
                     <td>{u.employee_id || u.id}</td>
                     <td><strong>{u.username}</strong></td>
