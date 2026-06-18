@@ -386,6 +386,25 @@ router.post('/:id/respond', authenticate, authorize('admin'), async (req, res) =
   }
 });
 
+router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
+  try {
+    const task = await db.queryOne('SELECT id FROM tasks WHERE id = $1', [req.params.id]);
+    if (!task) return res.status(404).json({ error: 'Task not found.' });
+
+    await db.execute('DELETE FROM clarifications WHERE task_id = $1', [req.params.id]);
+    await db.execute('DELETE FROM task_photos WHERE task_id = $1', [req.params.id]);
+    await db.execute('DELETE FROM task_notes WHERE task_id = $1', [req.params.id]);
+    await db.execute('DELETE FROM activity_logs WHERE task_id = $1', [req.params.id]);
+    await db.execute('DELETE FROM task_assignments WHERE task_id = $1', [req.params.id]);
+    await db.execute('DELETE FROM tasks WHERE id = $1', [req.params.id]);
+
+    res.json({ message: 'Task deleted successfully.' });
+  } catch (err) {
+    console.error('Delete task error:', err);
+    res.status(500).json({ error: 'Failed to delete task.' });
+  }
+});
+
 router.post('/reset-all', authenticate, authorize('admin'), async (req, res) => {
   try {
     await db.execute('DELETE FROM clarifications');

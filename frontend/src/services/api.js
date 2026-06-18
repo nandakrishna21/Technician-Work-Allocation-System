@@ -53,6 +53,7 @@ export const tasksAPI = {
   },
   approve: (id) => api.post(`/tasks/${id}/approve`),
   reopen: (id) => api.post(`/tasks/${id}/reopen`),
+  delete: (id) => api.delete(`/tasks/${id}`),
   resetAll: () => api.post('/tasks/reset-all'),
   clarify: (id, data) => api.post(`/tasks/${id}/clarify`, data),
   respond: (id, data) => api.post(`/tasks/${id}/respond`, data)
