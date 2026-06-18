@@ -26,10 +26,16 @@ export default function Users() {
 
   useEffect(() => { fetchUsers(); }, []);
 
+  const mobile10 = (v) => { const d = v.replace(/\D/g, '').slice(0, 10); return d; };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    if (form.mobile && form.mobile.length !== 10) {
+      setError('Mobile number must be exactly 10 digits.');
+      return;
+    }
     try {
       await usersAPI.create(form);
       setSuccess(`User ${form.username} created successfully!`);
@@ -51,6 +57,10 @@ export default function Users() {
     e.preventDefault();
     setError('');
     setSuccess('');
+    if (editForm.mobile && editForm.mobile.length !== 10) {
+      setError('Mobile number must be exactly 10 digits.');
+      return;
+    }
     try {
       await usersAPI.update(editUser.id, editForm);
       setSuccess(`User ${editUser.username} updated successfully!`);
@@ -141,7 +151,7 @@ export default function Users() {
               </div>
               <div className="form-group">
                 <label>Mobile</label>
-                <input value={form.mobile} onChange={e => setForm(f => ({ ...f, mobile: e.target.value }))} />
+                <input value={form.mobile} onChange={e => setForm(f => ({ ...f, mobile: mobile10(e.target.value) }))} placeholder="10-digit number" />
               </div>
               <div className="form-actions">
                 <button type="button" className="btn btn-outline" onClick={() => setShowCreate(false)}>Cancel</button>
@@ -178,7 +188,7 @@ export default function Users() {
               </div>
               <div className="form-group">
                 <label>Mobile</label>
-                <input value={editForm.mobile} onChange={e => setEditForm(f => ({ ...f, mobile: e.target.value }))} />
+                <input value={editForm.mobile} onChange={e => setEditForm(f => ({ ...f, mobile: mobile10(e.target.value) }))} placeholder="10-digit number" />
               </div>
               <div className="form-actions">
                 <button type="button" className="btn btn-outline" onClick={() => setShowEdit(false)}>Cancel</button>

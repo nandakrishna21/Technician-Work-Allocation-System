@@ -24,9 +24,19 @@ export default function CreateTask() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const handleNumberInput = (e) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setForm(prev => ({ ...prev, mobile_number: val }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (form.mobile_number && form.mobile_number.length !== 10) {
+      setError('Mobile number must be exactly 10 digits.');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -74,7 +84,7 @@ export default function CreateTask() {
           <div className="form-row">
             <div className="form-group">
               <label>Mobile Number</label>
-              <input name="mobile_number" value={form.mobile_number} onChange={handleChange} />
+              <input name="mobile_number" value={form.mobile_number} onInput={handleNumberInput} placeholder="10-digit number" />
             </div>
             <div className="form-group">
               <label>Location / Address *</label>

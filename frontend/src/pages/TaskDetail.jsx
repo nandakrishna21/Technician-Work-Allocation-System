@@ -173,6 +173,11 @@ export default function TaskDetail() {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setEditLoading(true);
+    if (editForm.mobile_number && editForm.mobile_number.length !== 10) {
+      showToast('Mobile number must be exactly 10 digits.', 'error');
+      setEditLoading(false);
+      return;
+    }
     try {
       const formData = new FormData();
       Object.entries(editForm).forEach(([key, value]) => { formData.append(key, value); });
@@ -566,7 +571,7 @@ export default function TaskDetail() {
               <div className="form-row">
                 <div className="form-group">
                   <label>Mobile Number</label>
-                  <input name="mobile_number" value={editForm.mobile_number} onChange={handleEditChange} />
+                  <input name="mobile_number" value={editForm.mobile_number} onChange={e => setEditForm(prev => ({ ...prev, mobile_number: e.target.value.replace(/\D/g, '').slice(0, 10) }))} placeholder="10-digit number" />
                 </div>
                 <div className="form-group">
                   <label>Location</label>
