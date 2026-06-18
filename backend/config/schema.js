@@ -74,8 +74,11 @@ async function initializeDatabase() {
     user_id INTEGER NOT NULL REFERENCES users(id),
     note TEXT NOT NULL,
     is_progress INTEGER DEFAULT 0,
+    parent_id INTEGER REFERENCES task_notes(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  try { await db.execute("ALTER TABLE task_notes ADD COLUMN parent_id INTEGER REFERENCES task_notes(id)"); } catch (e) {}
 
   await db.execute(`CREATE TABLE IF NOT EXISTS task_photos (
     id SERIAL PRIMARY KEY,

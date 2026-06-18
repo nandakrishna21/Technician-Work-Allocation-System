@@ -138,7 +138,7 @@ router.get('/:id', authenticate, async (req, res) => {
 
     const logs = await db.query(`SELECT al.*, u.name as user_name FROM activity_logs al LEFT JOIN users u ON al.user_id = u.id WHERE al.task_id = $1 ORDER BY al.created_at DESC`, [task.id]);
 
-    const notes = await db.query(`SELECT tn.*, u.name as user_name FROM task_notes tn LEFT JOIN users u ON tn.user_id = u.id WHERE tn.task_id = $1 ORDER BY tn.created_at DESC`, [task.id]);
+    const notes = await db.query(`SELECT tn.*, u.name as user_name FROM task_notes tn LEFT JOIN users u ON tn.user_id = u.id WHERE tn.task_id = $1 ORDER BY tn.created_at ASC`, [task.id]);
 
     const photos = await db.query(`SELECT tp.*, u.name as user_name FROM task_photos tp LEFT JOIN users u ON tp.user_id = u.id WHERE tp.task_id = $1 ORDER BY tp.created_at DESC`, [task.id]);
 
@@ -259,17 +259,19 @@ router.post('/:id/start', authenticate, authorize('technician'), async (req, res
   }
 });
 
-router.post('/:id/notes', authenticate, authorize('technician'), async (req, res) => {
+router.post('/:id/notes', authenticate, async (req, res) => {
   try {
-    const { note, is_progress } = req.body;
+    const { note, is_progress, parent_id } = req.body;
     if (!note) return res.status(400).json({ error: 'Note is required.' });
 
-    const assignment = await db.queryOne('SELECT * FROM task_assignments WHERE task_id = $1 AND technician_id = $2',
-      [req.params.id, req.user.id]);
-    if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
+    if (req.user.role === 'technician') {
+      const assignment = await db.queryOne('SELECT * FROM task_assignments WHERE task_id = $1 AND technician_id = $2',
+        [req.params.id, req.user.id]);
+      if (!assignment) return res.status(403).json({ error: 'You are not assigned to this task.' });
+    }
 
-    await db.execute('INSERT INTO task_notes (task_id, user_id, note, is_progress) VALUES ($1, $2, $3, $4)',
-      [req.params.id, req.user.id, note, is_progress ? 1 : 0]);
+    await db.execute('INSERT INTO task_notes (task_id, user_id, note, is_progress, parent_id) VALUES ($1, $2, $3, $4, $5)',
+      [req.params.id, req.user.id, note, is_progress ? 1 : 0, parent_id || null]);
     await logActivity(req.params.id, req.user.id, 'NOTE_ADDED', `Note added by ${req.user.name}`);
 
     res.status(201).json({ message: 'Note added successfully.' });

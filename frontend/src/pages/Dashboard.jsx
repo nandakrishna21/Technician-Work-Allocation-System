@@ -193,7 +193,7 @@ export default function Dashboard() {
           ) : (
             <div className="activity-list">
               {activity.slice(0, 8).map(log => (
-                <div key={log.id} className="activity-item">
+                <div key={log.id} className="activity-item" onClick={() => navigate(`/tasks/${log.task_id}`)} style={{ cursor: 'pointer' }}>
                   <div className="activity-icon">&#9654;</div>
                   <div className="activity-content">
                     <div className="action">{log.action}</div>

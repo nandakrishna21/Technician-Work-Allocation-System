@@ -30,6 +30,8 @@ export default function TaskDetail() {
   const [clarifyLoading, setClarifyLoading] = useState(false);
   const [respondMessage, setRespondMessage] = useState('');
   const [respondLoading, setRespondLoading] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
+  const [replyText, setReplyText] = useState('');
 
   const fetchTask = () => {
     setLoading(true);
@@ -236,6 +238,7 @@ export default function TaskDetail() {
           <h1>{task.id}</h1>
           <span className={statusBadge(task.status)}>{task.status}</span>
           <span className={`priority-${task.priority.toLowerCase()}`}>{task.priority}</span>
+          <button className="btn btn-sm btn-outline" onClick={fetchTask} style={{ marginLeft: 'auto' }}>&#8635; Reload</button>
         </div>
       </div>
 
@@ -445,7 +448,7 @@ export default function TaskDetail() {
 
       {activeTab === 'notes' && (
         <div className="card">
-          {user?.role === 'technician' && (task.status === 'IN_PROGRESS' || task.status === 'ACCEPTED') && (
+          {(user?.role === 'technician' || user?.role === 'admin') && (task.status === 'IN_PROGRESS' || task.status === 'ACCEPTED' || task.status === 'ASSIGNED') && !replyTo && (
             <form onSubmit={handleAddNote} style={{ marginBottom: '1.5rem' }}>
               <div className="form-group">
                 <label>Add Note / Progress Update</label>
@@ -483,15 +486,46 @@ export default function TaskDetail() {
           {task.notes?.length === 0 ? (
             <div className="empty-state">No notes yet.</div>
           ) : (
-            task.notes?.map(note => (
-              <div key={note.id} className="note-item">
-                <div className="note-header">
-                  <strong>{note.user_name}</strong>
-                  <span style={{ color: '#999', fontSize: '0.8rem' }}>{formatDate(note.created_at)}</span>
-                </div>
-                <div className="note-text">{note.note}</div>
-              </div>
-            ))
+            <>
+              {task.notes.filter(n => !n.parent_id).map(note => {
+                const replies = task.notes.filter(n => n.parent_id === note.id);
+                return (
+                  <div key={note.id}>
+                    <div className="note-item">
+                      <div className="note-header">
+                        <strong>{note.user_name}</strong>
+                        <span style={{ color: '#999', fontSize: '0.8rem' }}>{formatDate(note.created_at)}</span>
+                      </div>
+                      <div className="note-text">{note.note}</div>
+                      {(user?.role === 'technician' || user?.role === 'admin') && (task.status === 'IN_PROGRESS' || task.status === 'ACCEPTED' || task.status === 'ASSIGNED') && (
+                        <button className="btn btn-sm btn-outline" style={{ marginTop: '0.5rem', fontSize: '0.75rem', padding: '0.2rem 0.6rem' }} onClick={() => { setReplyTo(replyTo === note.id ? null : note.id); setReplyText(''); }}>{replyTo === note.id ? 'Cancel Reply' : 'Reply'}</button>
+                      )}
+                      {replyTo === note.id && (
+                        <div style={{ marginTop: '0.5rem' }}>
+                          <textarea
+                            value={replyText}
+                            onChange={e => setReplyText(e.target.value)}
+                            placeholder="Write a reply..."
+                            rows={2}
+                            style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1.5px solid var(--border)', borderRadius: 'var(--radius)', fontFamily: 'inherit', fontSize: '0.85rem', background: 'var(--card-bg)', color: 'var(--text)', resize: 'vertical' }}
+                          />
+                          <button className="btn btn-primary btn-sm" style={{ marginTop: '0.3rem', fontSize: '0.8rem', padding: '0.3rem 0.8rem' }} onClick={async () => { if (!replyText.trim()) return; try { await tasksAPI.addNote(id, { note: replyText, parent_id: note.id }); setReplyText(''); setReplyTo(null); showToast('Reply added!', 'success'); fetchTask(); } catch { showToast('Failed to add reply.', 'error'); } }}>Send Reply</button>
+                        </div>
+                      )}
+                    </div>
+                    {replies.map(reply => (
+                      <div key={reply.id} className="note-item" style={{ marginLeft: '2rem', borderLeft: '3px solid var(--primary)', paddingLeft: '1rem' }}>
+                        <div className="note-header">
+                          <strong>{reply.user_name}</strong>
+                          <span style={{ color: '#999', fontSize: '0.8rem' }}>{formatDate(reply.created_at)}</span>
+                        </div>
+                        <div className="note-text">{reply.note}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </>
           )}
         </div>
       )}
