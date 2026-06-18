@@ -90,6 +90,7 @@ export default function Dashboard() {
 
   const totalActive = (counts.CREATED || 0) + (counts.ASSIGNED || 0) + (counts.ACCEPTED || 0) + (counts.IN_PROGRESS || 0);
   const totalDone = (counts.COMPLETED || 0) + (counts.CLOSED || 0);
+  const totalClosed = counts.CLOSED || 0;
 
   return (
     <div>
@@ -97,7 +98,7 @@ export default function Dashboard() {
       <div className="dash-welcome">
         <div className="dash-welcome-text">
           <h2>{getGreeting()}, {user?.role === 'admin' ? 'Admin' : user?.name?.split(' ')[0] || 'User'}</h2>
-          <p>{totalTasks > 0 ? `You have ${totalActive} active task${totalActive !== 1 ? 's' : ''} and ${totalDone} completed.` : 'No tasks yet. Create your first task to get started.'}</p>
+          <p>{totalTasks > 0 ? `You have ${totalActive} active task${totalActive !== 1 ? 's' : ''}, ${totalDone} completed, and ${totalClosed} closed.` : 'No tasks yet. Create your first task to get started.'}</p>
         </div>
         <div className="dash-welcome-actions">
           {user?.role === 'admin' && (
@@ -124,6 +125,11 @@ export default function Dashboard() {
         <div className="dash-summary-item">
           <span className="dash-summary-value" style={{ color: '#10b981' }}>{totalDone}</span>
           <span className="dash-summary-label">Completed</span>
+        </div>
+        <div className="dash-summary-divider"></div>
+        <div className="dash-summary-item">
+          <span className="dash-summary-value" style={{ color: '#6b7280' }}>{totalClosed}</span>
+          <span className="dash-summary-label">Closed</span>
         </div>
       </div>
 
