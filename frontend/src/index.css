@@ -774,6 +774,10 @@ tbody tr:active { background: color-mix(in srgb, var(--primary-light) 80%, trans
 .detail-item label { display: block; font-size: 0.7rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; margin-bottom: 0.2rem; }
 .detail-item .value { font-size: 0.9rem; font-weight: 500; }
 .detail-item.full { grid-column: 1 / -1; }
+.techs-row { grid-column: 1 / -1; }
+.tech-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.tech-tag { display: inline-flex; background: var(--primary-light); color: var(--primary); padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; white-space: nowrap; }
+.tech-tag.tech-lead { background: var(--primary); color: #fff; }
 
 /* Filter Bar */
 .filter-bar {

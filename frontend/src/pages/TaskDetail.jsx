@@ -314,6 +314,20 @@ export default function TaskDetail() {
               <label>Created At</label>
                <div className="value">{formatDate(task.created_at)}</div>
             </div>
+            <div className="detail-item techs-row">
+              <label>Assigned Technicians</label>
+              <div className="value">
+                {task.technicians?.length > 0 ? (
+                  <div className="tech-tags">
+                    {task.technicians.map(t => (
+                      <span key={t.id} className={`tech-tag ${t.is_lead ? 'tech-lead' : ''}`}>
+                        {t.name}{t.is_lead ? ' (Lead)' : ''}
+                      </span>
+                    ))}
+                  </div>
+                ) : 'Not assigned yet.'}
+              </div>
+            </div>
             {task.assigned_by_name && (
               <>
                 <div className="detail-item">
@@ -374,18 +388,6 @@ export default function TaskDetail() {
                 <div className="value">{task.completion_notes}</div>
               </div>
             )}
-            <div className="detail-item full">
-              <label>Assigned Technicians</label>
-              <div className="value">
-                {task.technicians?.length > 0 ? (
-                  <ul style={{ paddingLeft: '1.25rem' }}>
-                    {task.technicians.map(t => (
-                      <li key={t.id}>{t.name} {t.is_lead ? '(Lead)' : ''}</li>
-                    ))}
-                  </ul>
-                ) : 'Not assigned yet.'}
-              </div>
-            </div>
             {task.clarification_request && (
               <div className="detail-item full">
                 <label>Clarification Request</label>
